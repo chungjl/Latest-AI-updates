@@ -1,0 +1,11 @@
+node_modules/
+.venv/
+dist/
+data/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.tar.gz

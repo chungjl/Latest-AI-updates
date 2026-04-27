@@ -1,0 +1,76 @@
+[
+  {
+    "name": "OpenAI News",
+    "url": "https://openai.com/news/rss.xml",
+    "type": "官方来源",
+    "enabled": true
+  },
+  {
+    "name": "Anthropic News",
+    "url": "https://www.anthropic.com/news",
+    "kind": "html_page",
+    "link_patterns": ["/news/"],
+    "type": "官方来源",
+    "enabled": true
+  },
+  {
+    "name": "Google DeepMind Blog",
+    "url": "https://deepmind.google/blog/rss.xml",
+    "type": "官方来源",
+    "enabled": true
+  },
+  {
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog/feed.xml",
+    "type": "官方来源",
+    "enabled": true
+  },
+  {
+    "name": "GitHub Blog AI",
+    "url": "https://github.blog/tag/ai/feed/",
+    "type": "官方来源",
+    "enabled": true
+  },
+  {
+    "name": "TechCrunch AI",
+    "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "type": "媒体/博客",
+    "enabled": true
+  },
+  {
+    "name": "The Verge AI",
+    "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    "type": "媒体/博客",
+    "enabled": true
+  },
+  {
+    "name": "VentureBeat AI",
+    "url": "https://venturebeat.com/category/ai/feed/",
+    "type": "媒体/博客",
+    "enabled": true
+  },
+  {
+    "name": "MIT News AI",
+    "url": "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml",
+    "type": "研究/高校",
+    "enabled": true
+  },
+  {
+    "name": "arXiv cs.AI",
+    "url": "https://rss.arxiv.org/rss/cs.AI",
+    "type": "研究/论文",
+    "enabled": true
+  },
+  {
+    "name": "arXiv cs.LG",
+    "url": "https://rss.arxiv.org/rss/cs.LG",
+    "type": "研究/论文",
+    "enabled": true
+  },
+  {
+    "name": "Hacker News: AI",
+    "url": "https://hnrss.org/newest?q=AI",
+    "type": "社区",
+    "enabled": true
+  }
+]

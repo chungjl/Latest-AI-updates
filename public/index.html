@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI 每日情报</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>AI 每日情报</h1>
+        <p id="updated">等待刷新</p>
+      </div>
+      <div class="actions">
+        <input id="search" type="search" placeholder="搜索 ChatGPT、Claude、Agent..." />
+        <button id="refresh">刷新来源</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary" aria-label="概览">
+        <div>
+          <span id="total" class="metric">0</span>
+          <span>条已收录</span>
+        </div>
+        <div>
+          <span id="official" class="metric">0</span>
+          <span>条官方来源</span>
+        </div>
+        <div>
+          <span id="today" class="metric">0</span>
+          <span>条最近 24 小时</span>
+        </div>
+      </section>
+
+      <nav id="tabs" class="tabs" aria-label="分类筛选"></nav>
+
+      <section id="errors" class="errors" hidden></section>
+      <section id="items" class="items"></section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

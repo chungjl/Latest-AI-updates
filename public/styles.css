@@ -1,0 +1,259 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #20242b;
+  --muted: #68707d;
+  --line: #dfe4ea;
+  --accent: #176b87;
+  --accent-ink: #ffffff;
+  --official: #1f7a4d;
+  --warning: #a35b00;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding: 20px 28px;
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+p {
+  margin: 0;
+}
+
+#updated {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+input,
+button {
+  height: 40px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  font: inherit;
+}
+
+input {
+  width: min(42vw, 420px);
+  padding: 0 12px;
+  background: #fff;
+}
+
+button {
+  padding: 0 14px;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 650;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px 20px 48px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.summary > div {
+  min-height: 78px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.metric {
+  color: var(--ink);
+  font-size: 28px;
+  font-weight: 750;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+
+.tab {
+  white-space: nowrap;
+  height: 34px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0 12px;
+  font-weight: 600;
+}
+
+.tab.active {
+  background: #1f2933;
+  color: #fff;
+  border-color: #1f2933;
+}
+
+.errors {
+  margin: 6px 0 16px;
+  padding: 12px 14px;
+  background: #fff7ed;
+  color: var(--warning);
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.item {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.item h2 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.item h2 a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.meta,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.summary-text {
+  color: #3f4651;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  color: var(--muted);
+  background: #fafbfc;
+}
+
+.chip.official {
+  color: var(--official);
+  border-color: #b7e4ca;
+  background: #f0fdf4;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  padding: 36px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  .summary,
+  .items {
+    grid-template-columns: 1fr;
+  }
+}

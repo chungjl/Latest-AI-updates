@@ -1,0 +1,11 @@
+{
+  "scheduler": {
+    "enabled": true,
+    "timezone": "Asia/Shanghai",
+    "daily_times": [
+      "08:00",
+      "20:00"
+    ],
+    "run_on_startup": false
+  }
+}
