@@ -25,6 +25,11 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 body {
   min-width: 1024px;
   margin: 0;
