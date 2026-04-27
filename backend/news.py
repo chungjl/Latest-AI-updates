@@ -55,7 +55,7 @@ REFRESH_HISTORY_FILE = DATA_DIR / "refresh_history.json"
 REFRESH_STATUS_FILE = DATA_DIR / "refresh_status.json"
 
 MAX_ITEMS_PER_SOURCE = 25
-REQUEST_TIMEOUT_SECONDS = 18
+REQUEST_TIMEOUT_SECONDS = max(3, int(os.getenv("AI_INTEL_REQUEST_TIMEOUT_SECONDS", "8")))
 FETCH_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_FETCH_CONCURRENCY", "4")))
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
 logger = logging.getLogger("ai_intel.news")
