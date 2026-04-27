@@ -11,7 +11,7 @@ if [ -f /etc/latest-ai-updates.env ]; then
 fi
 
 git pull --ff-only
-npm install
+npm ci
 npm run build
 
 .venv/bin/pip install -r requirements.txt
