@@ -1615,18 +1615,7 @@ button {
   }
 
   .dashboardHeader::after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 20px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at center, var(--primary) 0 5px, transparent 6px),
-      rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(16, 24, 40, 0.08);
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    display: none;
   }
 
   .headerKicker {
@@ -1682,7 +1671,26 @@ button {
   }
 
   .primaryButton {
-    display: none;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    z-index: 2;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    color: var(--primary);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(16, 24, 40, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    touch-action: manipulation;
+  }
+
+  .primaryButton svg {
+    width: 20px;
+    height: 20px;
   }
 
   .metrics {
