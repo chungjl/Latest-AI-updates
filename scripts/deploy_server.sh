@@ -12,6 +12,7 @@ fi
 
 git pull --ff-only
 npm ci
+git restore package-lock.json package.json 2>/dev/null || true
 npm run build
 
 .venv/bin/pip install -r requirements.txt
