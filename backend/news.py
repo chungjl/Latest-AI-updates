@@ -57,8 +57,9 @@ REFRESH_STATUS_FILE = DATA_DIR / "refresh_status.json"
 MAX_ITEMS_PER_SOURCE = 25
 REQUEST_TIMEOUT_SECONDS = max(3, int(os.getenv("AI_INTEL_REQUEST_TIMEOUT_SECONDS", "8")))
 FETCH_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_FETCH_CONCURRENCY", "4")))
+SKIP_FAILED_SOURCES_THRESHOLD = max(0, int(os.getenv("AI_INTEL_SKIP_FAILED_SOURCES_THRESHOLD", "0")))
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
-logger = logging.getLogger("ai_intel.news")
+logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
 
 DEFAULT_APP_CONFIG = {
@@ -328,15 +329,35 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
     fetched_count = 0
     fetched_items: list[dict[str, Any]] = []
     enabled_sources = [source for source in sources if source.get("enabled", True)]
+    skipped_sources = [
+        source
+        for source in enabled_sources
+        if SKIP_FAILED_SOURCES_THRESHOLD and source.get("failure_count", 0) >= SKIP_FAILED_SOURCES_THRESHOLD
+    ]
+    fetch_sources = [source for source in enabled_sources if source not in skipped_sources]
     semaphore = asyncio.Semaphore(FETCH_CONCURRENCY)
 
     async with httpx.AsyncClient(
         headers={"User-Agent": USER_AGENT},
-        timeout=REQUEST_TIMEOUT_SECONDS,
+        timeout=httpx.Timeout(
+            REQUEST_TIMEOUT_SECONDS,
+            connect=min(3, REQUEST_TIMEOUT_SECONDS),
+            read=REQUEST_TIMEOUT_SECONDS,
+            write=3,
+            pool=2,
+        ),
+        limits=httpx.Limits(max_connections=FETCH_CONCURRENCY + 2, max_keepalive_connections=FETCH_CONCURRENCY),
         follow_redirects=True,
     ) as client:
         results = await asyncio.gather(
-            *(fetch_source_items(client, semaphore, source) for source in enabled_sources),
+            *(fetch_source_items(client, semaphore, source) for source in fetch_sources),
+        )
+
+    for source in skipped_sources:
+        logger.info(
+            "Skipped source %s after %s consecutive failures",
+            source.get("name", source.get("url", "未知来源")),
+            source.get("failure_count", 0),
         )
 
     for result in results:
@@ -357,6 +378,7 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
         "errors": errors,
         "stats": {
             "sources": len(enabled_sources),
+            "skipped_sources": len(skipped_sources),
             "fetched": fetched_count,
             "stored": stored,
         },
