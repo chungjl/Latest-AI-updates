@@ -59,6 +59,7 @@ REQUEST_TIMEOUT_SECONDS = 18
 FETCH_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_FETCH_CONCURRENCY", "4")))
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
 logger = logging.getLogger("ai_intel.news")
+logger.setLevel(logging.INFO)
 
 DEFAULT_APP_CONFIG = {
     "scheduler": {
