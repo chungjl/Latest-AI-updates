@@ -1,0 +1,49 @@
+<view class="page home-page">
+  <view class="nav">
+    <view>
+      <text class="nav-small">AI资讯雷达</text>
+      <text class="nav-title">今日 AI 技术简报</text>
+    </view>
+    <button class="nav-more" bindtap="refresh">•••</button>
+  </view>
+
+  <view class="hero">
+    <text class="hero-subtitle">自动聚合公众号、官网、GitHub、HN、X 等渠道，提炼高价值信号。</text>
+  </view>
+
+  <view wx:if="{{refreshJob}}" class="refresh-card card">
+    <view>
+      <text class="refresh-title">刷新中 {{refreshJob.completed_sources}}/{{refreshJob.total_sources}}</text>
+      <text class="refresh-meta">已抓取 {{refreshJob.fetched}} 条，新增 {{refreshJob.new_items}} 条</text>
+    </view>
+    <view class="refresh-track"><view style="width: {{refreshPercent}}%;"></view></view>
+  </view>
+
+  <view class="search-box">
+    <input placeholder="搜索模型、公司、论文、项目..." value="{{query}}" bindinput="onSearchInput" />
+  </view>
+
+  <view class="metrics">
+    <view class="metric card"><text>{{stats.total}}</text><text>今日资讯</text></view>
+    <view class="metric card"><text>{{stats.high}}</text><text>高价值</text></view>
+    <view class="metric card"><text>{{stats.credibility}}%</text><text>可信度</text></view>
+  </view>
+
+  <scroll-view class="category-scroll" scroll-x>
+    <button wx:for="{{categories}}" wx:key="name" class="category {{activeCategory === item.name ? 'active' : ''}}" data-name="{{item.name}}" bindtap="selectCategory">
+      {{item.name}}
+    </button>
+  </scroll-view>
+
+  <text class="section-title">重点信号</text>
+
+  <view wx:if="{{filteredItems.length === 0}}" class="empty card">暂无匹配资讯</view>
+  <view wx:for="{{filteredItems}}" wx:key="id" class="news-card card" data-index="{{index}}" bindtap="openDetail">
+    <view class="news-top">
+      <text class="pill">{{item.source}}</text>
+      <text class="pill pill-green">{{item.score}}</text>
+    </view>
+    <text class="news-title">{{item.title}}</text>
+    <text class="news-summary">{{item.summary || '暂无摘要，点击查看详情。'}}</text>
+  </view>
+</view>

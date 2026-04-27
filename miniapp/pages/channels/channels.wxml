@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="nav">
+    <button class="nav-back" bindtap="goBack">‹</button>
+    <text class="nav-title">频道订阅</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="hero">
+    <text class="hero-title">选择资讯来源</text>
+    <text class="hero-subtitle">配置小程序每日收集和展示的来源范围</text>
+  </view>
+
+  <view wx:for="{{sources}}" wx:key="id" class="source-card card">
+    <view>
+      <text class="source-name">{{item.name}}</text>
+      <text class="source-meta">{{item.type}} / {{item.kind}}</text>
+    </view>
+    <switch checked="{{item.enabled}}" data-index="{{index}}" color="#6366F1" bindchange="toggleSource" />
+  </view>
+</view>

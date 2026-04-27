@@ -1,0 +1,60 @@
+.trend-card {
+  margin-top: 34rpx;
+  padding: 30rpx;
+}
+
+.trend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+}
+
+.trend-row text:first-child {
+  color: #101828;
+  font-size: 32rpx;
+  font-weight: 950;
+}
+
+.positive,
+.negative {
+  font-size: 30rpx;
+  font-weight: 950;
+}
+
+.positive {
+  color: #059669;
+}
+
+.negative {
+  color: #dc2626;
+}
+
+.bar {
+  height: 14rpx;
+  margin-top: 28rpx;
+  border-radius: 999rpx;
+  background: #e4e7ec;
+  overflow: hidden;
+}
+
+.bar view {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.primary {
+  background: #6366f1;
+}
+
+.cyan {
+  background: #06b6d4;
+}
+
+.amber {
+  background: #f59e0b;
+}
+
+.red {
+  background: #ef4444;
+}

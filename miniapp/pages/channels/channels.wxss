@@ -1,0 +1,23 @@
+.source-card {
+  min-height: 126rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-top: 28rpx;
+  padding: 28rpx 34rpx;
+}
+
+.source-name {
+  display: block;
+  color: #101828;
+  font-size: 31rpx;
+  font-weight: 950;
+}
+
+.source-meta {
+  display: block;
+  margin-top: 12rpx;
+  color: #667085;
+  font-size: 25rpx;
+}

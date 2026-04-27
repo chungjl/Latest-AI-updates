@@ -1,0 +1,42 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/trends/trends",
+    "pages/topics/topics",
+    "pages/channels/channels",
+    "pages/me/me"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F7F8FC",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": false,
+    "color": "#98A2B3",
+    "selectedColor": "#6366F1",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/trends/trends",
+        "text": "趋势"
+      },
+      {
+        "pagePath": "pages/topics/topics",
+        "text": "专题"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

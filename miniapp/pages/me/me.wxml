@@ -1,0 +1,50 @@
+<view class="page">
+  <view class="nav">
+    <text class="nav-title">我的</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="profile">
+    <view class="avatar"></view>
+    <view>
+      <text class="profile-name">AI 情报员</text>
+      <text class="profile-meta">每日 09:30 自动生成简报</text>
+    </view>
+  </view>
+
+  <view class="menu-card card" bindtap="openBookmarks">
+    <view>
+      <text>我的收藏</text>
+      <text>{{bookmarkCount}} 条</text>
+    </view>
+    <text>›</text>
+  </view>
+  <view class="menu-card card">
+    <view>
+      <text>推送设置</text>
+      <text>每日简报 / 重要信号</text>
+    </view>
+    <text>›</text>
+  </view>
+  <view class="menu-card card">
+    <view>
+      <text>导出报告</text>
+      <text>Markdown / PDF</text>
+    </view>
+    <text>›</text>
+  </view>
+  <view class="menu-card card" bindtap="openChannels">
+    <view>
+      <text>数据源管理</text>
+      <text>{{sourceCount}} 个渠道</text>
+    </view>
+    <text>›</text>
+  </view>
+  <view class="menu-card card">
+    <view>
+      <text>关于产品</text>
+      <text>版本 0.1</text>
+    </view>
+    <text>›</text>
+  </view>
+</view>

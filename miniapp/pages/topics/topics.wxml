@@ -1,0 +1,22 @@
+<view class="page">
+  <view class="nav">
+    <text class="nav-title">专题追踪</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="hero">
+    <text class="hero-title">我的追踪专题</text>
+    <text class="hero-subtitle">把分散资讯归并到长期观察主题里</text>
+  </view>
+
+  <view wx:for="{{topics}}" wx:key="id" class="topic-card card" data-id="{{item.id}}" bindtap="openTopic">
+    <view class="topic-icon"></view>
+    <view>
+      <text class="topic-name">{{item.name}}</text>
+      <text class="topic-meta">{{item.keywordsText}}</text>
+    </view>
+    <text class="topic-status">{{item.enabled ? '升温' : '暂停'}}</text>
+  </view>
+
+  <button class="primary-action" bindtap="openChannels">+ 新建追踪专题</button>
+</view>

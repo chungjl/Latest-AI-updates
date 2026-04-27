@@ -1,0 +1,143 @@
+.nav-small {
+  display: block;
+  margin-bottom: 34rpx;
+  color: #101828;
+  font-size: 34rpx;
+  font-weight: 900;
+}
+
+.search-box {
+  height: 78rpx;
+  display: flex;
+  align-items: center;
+  margin-top: 38rpx;
+  padding: 0 36rpx;
+  border: 2rpx solid rgba(16, 24, 40, 0.08);
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.search-box input {
+  width: 100%;
+  color: #101828;
+  font-size: 27rpx;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22rpx;
+  margin-top: 38rpx;
+}
+
+.metric {
+  min-height: 128rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22rpx 26rpx;
+}
+
+.metric text:first-child {
+  color: #101828;
+  font-size: 38rpx;
+  font-weight: 950;
+}
+
+.metric text:last-child {
+  margin-top: 8rpx;
+  color: #667085;
+  font-size: 24rpx;
+}
+
+.category-scroll {
+  margin-top: 42rpx;
+  white-space: nowrap;
+}
+
+.category {
+  min-width: 96rpx;
+  height: 56rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 18rpx;
+  padding: 0 28rpx;
+  border: 2rpx solid rgba(16, 24, 40, 0.08);
+  border-radius: 999rpx;
+  color: #344054;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 25rpx;
+  font-weight: 850;
+}
+
+.category.active {
+  color: #ffffff;
+  background: #101828;
+}
+
+.news-card {
+  display: block;
+  margin-bottom: 28rpx;
+  padding: 30rpx;
+}
+
+.news-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.news-title {
+  display: block;
+  margin-top: 28rpx;
+  color: #101828;
+  font-size: 34rpx;
+  line-height: 1.32;
+  font-weight: 950;
+}
+
+.news-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 30rpx;
+  color: #667085;
+  font-size: 27rpx;
+  line-height: 1.55;
+}
+
+.refresh-card {
+  margin-top: 24rpx;
+  padding: 24rpx;
+}
+
+.refresh-title {
+  display: block;
+  color: #101828;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.refresh-meta {
+  display: block;
+  margin-top: 8rpx;
+  color: #667085;
+  font-size: 24rpx;
+}
+
+.refresh-track {
+  height: 10rpx;
+  margin-top: 18rpx;
+  border-radius: 999rpx;
+  background: #e4e7ec;
+  overflow: hidden;
+}
+
+.refresh-track view {
+  height: 100%;
+  border-radius: inherit;
+  background: #6366f1;
+}
