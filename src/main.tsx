@@ -193,7 +193,7 @@ function App() {
         setLoading(false);
         window.clearInterval(timer);
       }
-    }, 1500);
+    }, 3000);
     return () => window.clearInterval(timer);
   }, [loading, refreshJob?.id]);
 
