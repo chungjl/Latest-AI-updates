@@ -18,6 +18,8 @@ from .news import (
     get_event_detail,
     get_events,
     get_items,
+    get_current_refresh_job_status,
+    get_refresh_job_status,
     get_sources,
     get_summaries,
     get_system_status,
@@ -189,3 +191,18 @@ async def refresh() -> dict:
 @app.get("/api/refresh")
 async def refresh_get() -> dict:
     return await scheduler.run_refresh(trigger="manual")
+
+
+@app.post("/api/refresh/start")
+async def refresh_start() -> dict:
+    return await scheduler.start_refresh_job(trigger="manual")
+
+
+@app.get("/api/refresh/current")
+def refresh_current() -> dict | None:
+    return get_current_refresh_job_status()
+
+
+@app.get("/api/refresh/runs/{job_id}")
+def refresh_run(job_id: str) -> dict | None:
+    return get_refresh_job_status(job_id)

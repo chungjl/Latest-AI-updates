@@ -12,7 +12,7 @@ import { Sidebar } from "./components/Sidebar";
 import { SourceHealthPanel } from "./components/SourceHealthPanel";
 import { TopicPanel } from "./components/TopicPanel";
 import { TrendPanel } from "./components/TrendPanel";
-import type { ApiPayload, Bookmark, DailyBrief, IntelEvent, NewsItem, Source, SystemStatus, Topic } from "./types";
+import type { ApiPayload, Bookmark, DailyBrief, IntelEvent, NewsItem, RefreshJob, Source, SystemStatus, Topic } from "./types";
 import "./styles.css";
 
 const PAGE_SIZE = 10;
@@ -29,6 +29,7 @@ function App() {
   const [schedulerSaving, setSchedulerSaving] = useState(false);
   const [dailyBrief, setDailyBrief] = useState<DailyBrief | null>(null);
   const [briefLoading, setBriefLoading] = useState(false);
+  const [refreshJob, setRefreshJob] = useState<RefreshJob | null>(null);
   const [events, setEvents] = useState<IntelEvent[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -72,11 +73,15 @@ function App() {
   async function refreshItems() {
     setLoading(true);
     try {
-      const response = await fetch("/api/refresh", { method: "POST" });
-      setPayload(await response.json());
+      const response = await fetch("/api/refresh/start", { method: "POST" });
+      const job = await response.json();
+      if (job.job_id) {
+        const statusResponse = await fetch(`/api/refresh/runs/${job.job_id}`);
+        setRefreshJob(await statusResponse.json());
+      }
       await loadStatus();
       await loadProductData();
-    } finally {
+    } catch {
       setLoading(false);
     }
   }
@@ -175,6 +180,23 @@ function App() {
     loadProductData();
   }, []);
 
+  useEffect(() => {
+    if (!loading || !refreshJob?.id) return;
+    const timer = window.setInterval(async () => {
+      const response = await fetch(`/api/refresh/runs/${refreshJob.id}`);
+      const job: RefreshJob = await response.json();
+      setRefreshJob(job);
+      await loadItems();
+      await loadStatus();
+      await loadProductData();
+      if (!job.status.startsWith("running")) {
+        setLoading(false);
+        window.clearInterval(timer);
+      }
+    }, 1500);
+    return () => window.clearInterval(timer);
+  }, [loading, refreshJob?.id]);
+
   const categories = useMemo(() => {
     const counts = new Map<string, number>([["全部", payload.items.length]]);
     for (const item of payload.items) counts.set(item.category, (counts.get(item.category) || 0) + 1);
@@ -238,6 +260,29 @@ function App() {
 
         {activeView === "brief" && (
           <>
+            {refreshJob && loading && (
+              <section className="refreshProgress">
+                <div>
+                  <strong>
+                    刷新中 {refreshJob.completed_sources}/{refreshJob.total_sources}
+                  </strong>
+                  <span>
+                    已抓取 {refreshJob.fetched} 条，新增 {refreshJob.new_items} 条
+                  </span>
+                </div>
+                <div className="refreshTrack">
+                  <span
+                    style={{
+                      width: `${Math.max(
+                        6,
+                        (refreshJob.completed_sources / Math.max(1, refreshJob.total_sources)) * 100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </section>
+            )}
+
             <CategoryFilter
               categories={categories}
               activeCategory={activeCategory}

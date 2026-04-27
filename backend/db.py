@@ -89,6 +89,34 @@ CREATE TABLE IF NOT EXISTS refresh_runs (
   errors JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
+CREATE TABLE IF NOT EXISTS refresh_jobs (
+  id TEXT PRIMARY KEY,
+  trigger TEXT NOT NULL,
+  status TEXT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL,
+  finished_at TIMESTAMPTZ,
+  total_sources INTEGER NOT NULL DEFAULT 0,
+  completed_sources INTEGER NOT NULL DEFAULT 0,
+  fetched INTEGER NOT NULL DEFAULT 0,
+  stored INTEGER NOT NULL DEFAULT 0,
+  new_items INTEGER NOT NULL DEFAULT 0,
+  errors JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_job_sources (
+  job_id TEXT NOT NULL REFERENCES refresh_jobs(id) ON DELETE CASCADE,
+  source_name TEXT NOT NULL,
+  status TEXT NOT NULL,
+  fetched INTEGER NOT NULL DEFAULT 0,
+  error TEXT,
+  duration_seconds NUMERIC,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (job_id, source_name)
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_jobs_started ON refresh_jobs (started_at DESC);
+
 CREATE TABLE IF NOT EXISTS summaries (
   article_id TEXT PRIMARY KEY REFERENCES articles(id) ON DELETE CASCADE,
   one_liner TEXT NOT NULL,

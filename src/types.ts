@@ -105,3 +105,25 @@ export type Source = {
   last_success_at: string | null;
   last_error: string | null;
 };
+
+export type RefreshJob = {
+  id: string;
+  trigger: string;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+  total_sources: number;
+  completed_sources: number;
+  fetched: number;
+  stored: number;
+  new_items: number;
+  errors: { source: string; error: string }[];
+  sources: Array<{
+    source_name: string;
+    status: string;
+    fetched: number;
+    error: string | null;
+    duration_seconds: number | null;
+    updated_at: string;
+  }>;
+};

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from .db import adapt_json, get_conn, iso, parse_dt
@@ -270,6 +270,151 @@ def list_refresh_runs(limit: int = 20) -> list[dict[str, Any]]:
         }
         for row in rows
     ]
+
+
+def create_refresh_job(job_id: str, trigger: str, started_at: str, total_sources: int) -> dict[str, Any]:
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO refresh_jobs (
+              id, trigger, status, started_at, total_sources, completed_sources, fetched, stored, new_items, errors, updated_at
+            )
+            VALUES (%s, %s, 'running', %s, %s, 0, 0, 0, 0, '[]'::jsonb, now())
+            ON CONFLICT (id) DO UPDATE SET
+              status = 'running',
+              started_at = EXCLUDED.started_at,
+              finished_at = NULL,
+              total_sources = EXCLUDED.total_sources,
+              completed_sources = 0,
+              fetched = 0,
+              stored = 0,
+              new_items = 0,
+              errors = '[]'::jsonb,
+              updated_at = now()
+            """,
+            (job_id, trigger, parse_dt(started_at), total_sources),
+        )
+    return get_refresh_job(job_id) or {"id": job_id, "status": "running"}
+
+
+def upsert_refresh_job_source(
+    job_id: str,
+    source_name: str,
+    status: str,
+    fetched: int = 0,
+    error: str | None = None,
+    duration_seconds: float | None = None,
+) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """
+            INSERT INTO refresh_job_sources (job_id, source_name, status, fetched, error, duration_seconds, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, now())
+            ON CONFLICT (job_id, source_name) DO UPDATE SET
+              status = EXCLUDED.status,
+              fetched = EXCLUDED.fetched,
+              error = EXCLUDED.error,
+              duration_seconds = EXCLUDED.duration_seconds,
+              updated_at = now()
+            """,
+            (job_id, source_name, status, fetched, error, duration_seconds),
+        )
+
+
+def update_refresh_job_progress(
+    job_id: str,
+    completed_delta: int = 0,
+    fetched_delta: int = 0,
+    new_items_delta: int = 0,
+    stored: int | None = None,
+    error: dict[str, Any] | None = None,
+) -> None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT errors FROM refresh_jobs WHERE id = %s", (job_id,)).fetchone()
+        errors = list(row["errors"] or []) if row else []
+        if error:
+            errors.append(error)
+        conn.execute(
+            """
+            UPDATE refresh_jobs
+            SET completed_sources = completed_sources + %s,
+                fetched = fetched + %s,
+                new_items = new_items + %s,
+                stored = COALESCE(%s, stored),
+                errors = %s,
+                updated_at = now()
+            WHERE id = %s
+            """,
+            (completed_delta, fetched_delta, new_items_delta, stored, adapt_json(errors), job_id),
+        )
+
+
+def finish_refresh_job(job_id: str, status: str, stored: int | None = None) -> dict[str, Any] | None:
+    with get_conn() as conn:
+        conn.execute(
+            """
+            UPDATE refresh_jobs
+            SET status = %s,
+                finished_at = now(),
+                stored = COALESCE(%s, stored),
+                updated_at = now()
+            WHERE id = %s
+            """,
+            (status, stored, job_id),
+        )
+    return get_refresh_job(job_id)
+
+
+def refresh_job_row(row: dict[str, Any]) -> dict[str, Any]:
+    item = dict(row)
+    item["started_at"] = iso(item["started_at"])
+    item["finished_at"] = iso(item["finished_at"])
+    item["updated_at"] = iso(item["updated_at"])
+    return item
+
+
+def get_refresh_job(job_id: str) -> dict[str, Any] | None:
+    with get_conn() as conn:
+        job = conn.execute(
+            """
+            SELECT id, trigger, status, started_at, finished_at, total_sources, completed_sources,
+                   fetched, stored, new_items, errors, updated_at
+            FROM refresh_jobs
+            WHERE id = %s
+            """,
+            (job_id,),
+        ).fetchone()
+        if not job:
+            return None
+        source_rows = conn.execute(
+            """
+            SELECT source_name, status, fetched, error, duration_seconds, updated_at
+            FROM refresh_job_sources
+            WHERE job_id = %s
+            ORDER BY updated_at DESC, source_name
+            """,
+            (job_id,),
+        ).fetchall()
+    sources = []
+    for row in source_rows:
+        item = dict(row)
+        item["duration_seconds"] = float(item["duration_seconds"]) if item["duration_seconds"] is not None else None
+        item["updated_at"] = iso(item["updated_at"])
+        sources.append(item)
+    return {**refresh_job_row(job), "sources": sources}
+
+
+def get_current_refresh_job() -> dict[str, Any] | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT id
+            FROM refresh_jobs
+            ORDER BY started_at DESC
+            LIMIT 1
+            """
+        ).fetchone()
+    return get_refresh_job(row["id"]) if row else None
 
 
 def upsert_summary(article_id: str, one_liner: str, why_important: str, audience: str, provider: str, model: str) -> None:

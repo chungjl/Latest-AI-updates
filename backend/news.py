@@ -18,9 +18,13 @@ from bs4 import BeautifulSoup
 
 from .db import init_db
 from .repository import (
+    create_refresh_job,
     delete_bookmark,
+    finish_refresh_job,
+    get_current_refresh_job,
     get_daily_brief,
     get_event,
+    get_refresh_job,
     get_setting,
     insert_refresh_run,
     list_articles,
@@ -37,9 +41,11 @@ from .repository import (
     set_bookmark,
     topic_articles,
     update_source_health,
+    update_refresh_job_progress,
     upsert_articles,
     upsert_daily_brief,
     upsert_setting,
+    upsert_refresh_job_source,
     upsert_source,
     upsert_sources,
     upsert_summary,
@@ -56,6 +62,7 @@ REFRESH_STATUS_FILE = DATA_DIR / "refresh_status.json"
 
 MAX_ITEMS_PER_SOURCE = 25
 REQUEST_TIMEOUT_SECONDS = max(3, int(os.getenv("AI_INTEL_REQUEST_TIMEOUT_SECONDS", "8")))
+BACKGROUND_REQUEST_TIMEOUT_SECONDS = max(8, int(os.getenv("AI_INTEL_BACKGROUND_REQUEST_TIMEOUT_SECONDS", "45")))
 FETCH_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_FETCH_CONCURRENCY", "4")))
 SKIP_FAILED_SOURCES_THRESHOLD = max(0, int(os.getenv("AI_INTEL_SKIP_FAILED_SOURCES_THRESHOLD", "0")))
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
@@ -299,32 +306,44 @@ async def fetch_source_items(
     client: httpx.AsyncClient,
     semaphore: asyncio.Semaphore,
     source: dict[str, Any],
+    timeout_seconds: int,
 ) -> dict[str, Any]:
     async with semaphore:
         started = time.perf_counter()
         source_name = source.get("name", source.get("url", "未知来源"))
         try:
-            text = await asyncio.wait_for(fetch_text(client, source["url"]), timeout=REQUEST_TIMEOUT_SECONDS)
+            text = await asyncio.wait_for(fetch_text(client, source["url"]), timeout=timeout_seconds)
             items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
-            logger.info("Fetched source %s in %.2fs with %s items", source_name, time.perf_counter() - started, len(items))
-            return {"source": source_name, "success": True, "items": items, "error": None}
+            duration_seconds = round(time.perf_counter() - started, 2)
+            logger.info("Fetched source %s in %.2fs with %s items", source_name, duration_seconds, len(items))
+            return {
+                "source": source_name,
+                "success": True,
+                "items": items,
+                "error": None,
+                "duration_seconds": duration_seconds,
+            }
         except asyncio.TimeoutError:
-            error_message = f"Timeout after {REQUEST_TIMEOUT_SECONDS}s"
-            logger.warning("Failed source %s in %.2fs: %s", source_name, time.perf_counter() - started, error_message)
+            duration_seconds = round(time.perf_counter() - started, 2)
+            error_message = f"Timeout after {timeout_seconds}s"
+            logger.warning("Failed source %s in %.2fs: %s", source_name, duration_seconds, error_message)
             return {
                 "source": source_name,
                 "success": False,
                 "items": [],
                 "error": error_message,
+                "duration_seconds": duration_seconds,
             }
         except Exception as exc:
+            duration_seconds = round(time.perf_counter() - started, 2)
             error_message = str(exc) or exc.__class__.__name__
-            logger.warning("Failed source %s in %.2fs: %s", source_name, time.perf_counter() - started, error_message)
+            logger.warning("Failed source %s in %.2fs: %s", source_name, duration_seconds, error_message)
             return {
                 "source": source_name,
                 "success": False,
                 "items": [],
                 "error": error_message,
+                "duration_seconds": duration_seconds,
             }
 
 
@@ -359,7 +378,7 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
         follow_redirects=True,
     ) as client:
         results = await asyncio.gather(
-            *(fetch_source_items(client, semaphore, source) for source in fetch_sources),
+            *(fetch_source_items(client, semaphore, source, REQUEST_TIMEOUT_SECONDS) for source in fetch_sources),
         )
 
     for source in skipped_sources:
@@ -418,6 +437,121 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
     )
     payload["refresh"] = history_entry
     return payload
+
+
+async def refresh_items_job(job_id: str, trigger: str = "manual") -> dict[str, Any]:
+    ensure_bootstrap()
+    started = time.perf_counter()
+    started_at = utc_now()
+    write_refresh_status({"running": True, "last_started_at": started_at, "last_error": None})
+    sources = list_sources()
+    enabled_sources = [source for source in sources if source.get("enabled", True)]
+    create_refresh_job(job_id, trigger, started_at, len(enabled_sources))
+
+    errors: list[dict[str, Any]] = []
+    fetched_count = 0
+    new_items_count = 0
+    stored = 0
+    semaphore = asyncio.Semaphore(FETCH_CONCURRENCY)
+
+    async with httpx.AsyncClient(
+        headers={"User-Agent": USER_AGENT},
+        timeout=httpx.Timeout(
+            BACKGROUND_REQUEST_TIMEOUT_SECONDS,
+            connect=min(5, BACKGROUND_REQUEST_TIMEOUT_SECONDS),
+            read=BACKGROUND_REQUEST_TIMEOUT_SECONDS,
+            write=5,
+            pool=5,
+        ),
+        limits=httpx.Limits(max_connections=FETCH_CONCURRENCY + 2, max_keepalive_connections=FETCH_CONCURRENCY),
+        follow_redirects=True,
+    ) as client:
+        tasks = [
+            asyncio.create_task(fetch_source_items(client, semaphore, source, BACKGROUND_REQUEST_TIMEOUT_SECONDS))
+            for source in enabled_sources
+        ]
+        for task in asyncio.as_completed(tasks):
+            result = await task
+            if result["success"]:
+                items = result["items"]
+                new_items, stored = upsert_articles(items)
+                fetched_count += len(items)
+                new_items_count += new_items
+                update_source_health(result["source"], True)
+                upsert_refresh_job_source(
+                    job_id,
+                    result["source"],
+                    "success",
+                    len(items),
+                    None,
+                    result.get("duration_seconds"),
+                )
+                update_refresh_job_progress(job_id, 1, len(items), new_items, stored)
+            else:
+                error = {"source": result["source"], "error": result["error"]}
+                errors.append(error)
+                update_source_health(result["source"], False, result["error"])
+                upsert_refresh_job_source(
+                    job_id,
+                    result["source"],
+                    "failed",
+                    0,
+                    result["error"],
+                    result.get("duration_seconds"),
+                )
+                update_refresh_job_progress(job_id, 1, 0, 0, stored or None, error)
+
+            items = list_articles()
+            write_json(
+                DATA_FILE,
+                {
+                    "last_updated": utc_now(),
+                    "items": items[:500],
+                    "errors": errors,
+                    "stats": {
+                        "sources": len(enabled_sources),
+                        "fetched": fetched_count,
+                        "stored": len(items),
+                    },
+                },
+            )
+
+    items = list_articles()
+    stored = len(items)
+    finished_at = utc_now()
+    duration_seconds = round(time.perf_counter() - started, 2)
+    history_entry = {
+        "trigger": trigger,
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "duration_seconds": duration_seconds,
+        "success": not errors,
+        "errors": errors,
+        "fetched": fetched_count,
+        "stored": stored,
+        "new_items": new_items_count,
+    }
+    record_refresh_history(history_entry)
+    rebuild_events()
+    write_refresh_status(
+        {
+            "running": False,
+            "last_finished_at": finished_at,
+            "last_success_at": finished_at if not errors else get_refresh_status().get("last_success_at"),
+            "last_error": errors[0] if errors else None,
+        }
+    )
+    return finish_refresh_job(job_id, "completed" if not errors else "completed_with_errors", stored) or history_entry
+
+
+def get_refresh_job_status(job_id: str) -> dict[str, Any] | None:
+    ensure_bootstrap()
+    return get_refresh_job(job_id)
+
+
+def get_current_refresh_job_status() -> dict[str, Any] | None:
+    ensure_bootstrap()
+    return get_current_refresh_job()
 
 
 def get_items() -> dict[str, Any]:

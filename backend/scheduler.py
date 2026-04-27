@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from contextlib import suppress
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from .news import get_app_config, get_refresh_status, refresh_items, write_refresh_status
+from .news import get_app_config, get_refresh_status, refresh_items, refresh_items_job, write_refresh_status
 
 
 class RefreshScheduler:
     def __init__(self) -> None:
         self._task: asyncio.Task | None = None
+        self._refresh_task: asyncio.Task | None = None
         self._lock = asyncio.Lock()
         self._stopped = asyncio.Event()
 
@@ -31,6 +33,16 @@ class RefreshScheduler:
     async def run_refresh(self, trigger: str = "manual") -> dict:
         async with self._lock:
             return await refresh_items(trigger=trigger)
+
+    async def start_refresh_job(self, trigger: str = "manual") -> dict:
+        if self._refresh_task and not self._refresh_task.done():
+            status = get_refresh_status()
+            return {"status": "running", "job_id": status.get("current_job_id")}
+
+        job_id = uuid.uuid4().hex
+        write_refresh_status({"running": True, "current_job_id": job_id, "last_error": None})
+        self._refresh_task = asyncio.create_task(refresh_items_job(job_id, trigger=trigger), name=f"refresh-job-{job_id}")
+        return {"status": "running", "job_id": job_id}
 
     async def _run(self) -> None:
         while not self._stopped.is_set():
@@ -71,7 +83,7 @@ class RefreshScheduler:
                 if latest_status.get("last_scheduled_key") == run_key:
                     return
                 write_refresh_status({"last_scheduled_key": run_key})
-                await refresh_items(trigger="scheduled")
+                await self.start_refresh_job(trigger="scheduled")
             return
 
 
