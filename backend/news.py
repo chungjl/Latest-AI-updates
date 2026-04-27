@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import time
 import urllib.parse
+import asyncio
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -53,7 +56,9 @@ REFRESH_STATUS_FILE = DATA_DIR / "refresh_status.json"
 
 MAX_ITEMS_PER_SOURCE = 25
 REQUEST_TIMEOUT_SECONDS = 18
+FETCH_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_FETCH_CONCURRENCY", "4")))
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
+logger = logging.getLogger("ai_intel.news")
 
 DEFAULT_APP_CONFIG = {
     "scheduler": {
@@ -288,6 +293,30 @@ async def fetch_text(client: httpx.AsyncClient, url: str) -> str:
     return response.text
 
 
+async def fetch_source_items(
+    client: httpx.AsyncClient,
+    semaphore: asyncio.Semaphore,
+    source: dict[str, Any],
+) -> dict[str, Any]:
+    async with semaphore:
+        started = time.perf_counter()
+        source_name = source.get("name", source.get("url", "未知来源"))
+        try:
+            text = await fetch_text(client, source["url"])
+            items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
+            logger.info("Fetched source %s in %.2fs with %s items", source_name, time.perf_counter() - started, len(items))
+            return {"source": source_name, "success": True, "items": items, "error": None}
+        except Exception as exc:
+            error_message = str(exc) or exc.__class__.__name__
+            logger.warning("Failed source %s in %.2fs: %s", source_name, time.perf_counter() - started, error_message)
+            return {
+                "source": source_name,
+                "success": False,
+                "items": [],
+                "error": error_message,
+            }
+
+
 async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
     ensure_bootstrap()
     started = time.perf_counter()
@@ -297,25 +326,27 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
     errors = []
     fetched_count = 0
     fetched_items: list[dict[str, Any]] = []
+    enabled_sources = [source for source in sources if source.get("enabled", True)]
+    semaphore = asyncio.Semaphore(FETCH_CONCURRENCY)
 
     async with httpx.AsyncClient(
         headers={"User-Agent": USER_AGENT},
         timeout=REQUEST_TIMEOUT_SECONDS,
         follow_redirects=True,
     ) as client:
-        for source in sources:
-            if not source.get("enabled", True):
-                continue
-            try:
-                text = await fetch_text(client, source["url"])
-                items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
-                fetched_count += len(items)
-                fetched_items.extend(items)
-                update_source_health(source["name"], True)
-            except Exception as exc:
-                error_message = str(exc) or exc.__class__.__name__
-                errors.append({"source": source.get("name", source.get("url", "未知来源")), "error": error_message})
-                update_source_health(source["name"], False, error_message)
+        results = await asyncio.gather(
+            *(fetch_source_items(client, semaphore, source) for source in enabled_sources),
+        )
+
+    for result in results:
+        if result["success"]:
+            items = result["items"]
+            fetched_count += len(items)
+            fetched_items.extend(items)
+            update_source_health(result["source"], True)
+        else:
+            errors.append({"source": result["source"], "error": result["error"]})
+            update_source_health(result["source"], False, result["error"])
 
     new_items, stored = upsert_articles(fetched_items)
     items = list_articles()
@@ -324,7 +355,7 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
         "items": items[:500],
         "errors": errors,
         "stats": {
-            "sources": len([source for source in sources if source.get("enabled", True)]),
+            "sources": len(enabled_sources),
             "fetched": fetched_count,
             "stored": stored,
         },
