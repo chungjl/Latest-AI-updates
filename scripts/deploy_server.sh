@@ -3,6 +3,13 @@ set -euo pipefail
 
 cd /opt/Latest-AI-updates
 
+if [ -f /etc/latest-ai-updates.env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . /etc/latest-ai-updates.env
+  set +a
+fi
+
 git pull --ff-only
 npm install
 npm run build
