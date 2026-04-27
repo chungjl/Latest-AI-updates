@@ -304,10 +304,19 @@ async def fetch_source_items(
         started = time.perf_counter()
         source_name = source.get("name", source.get("url", "未知来源"))
         try:
-            text = await fetch_text(client, source["url"])
+            text = await asyncio.wait_for(fetch_text(client, source["url"]), timeout=REQUEST_TIMEOUT_SECONDS)
             items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
             logger.info("Fetched source %s in %.2fs with %s items", source_name, time.perf_counter() - started, len(items))
             return {"source": source_name, "success": True, "items": items, "error": None}
+        except asyncio.TimeoutError:
+            error_message = f"Timeout after {REQUEST_TIMEOUT_SECONDS}s"
+            logger.warning("Failed source %s in %.2fs: %s", source_name, time.perf_counter() - started, error_message)
+            return {
+                "source": source_name,
+                "success": False,
+                "items": [],
+                "error": error_message,
+            }
         except Exception as exc:
             error_message = str(exc) or exc.__class__.__name__
             logger.warning("Failed source %s in %.2fs: %s", source_name, time.perf_counter() - started, error_message)
