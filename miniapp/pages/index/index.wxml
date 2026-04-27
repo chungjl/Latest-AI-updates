@@ -30,20 +30,39 @@
   </view>
 
   <scroll-view class="category-scroll" scroll-x>
-    <button wx:for="{{categories}}" wx:key="name" class="category {{activeCategory === item.name ? 'active' : ''}}" data-name="{{item.name}}" bindtap="selectCategory">
+    <button wx:for="{{categories}}" wx:key="name" class="category {{item.activeClass}}" data-name="{{item.name}}" bindtap="selectCategory">
       {{item.name}}
     </button>
   </scroll-view>
 
+  <view class="event-block">
+    <view class="feed-header">
+      <text class="section-title inline-title">事件聚合</text>
+      <text>{{events.length}} 个事件</text>
+    </view>
+    <view wx:if="{{events.length === 0}}" class="empty card">暂无事件聚合</view>
+    <view wx:for="{{events}}" wx:key="id" class="event-card card" data-id="{{item.id}}" bindtap="openEvent">
+      <text class="event-title">{{item.title}}</text>
+      <text class="event-meta">{{item.meta}}</text>
+      <text class="event-summary">{{item.summary}}</text>
+    </view>
+  </view>
+
   <text class="section-title">重点信号</text>
 
   <view wx:if="{{filteredItems.length === 0}}" class="empty card">暂无匹配资讯</view>
-  <view wx:for="{{filteredItems}}" wx:key="id" class="news-card card" data-index="{{index}}" bindtap="openDetail">
+  <view wx:for="{{pagedItems}}" wx:key="id" class="news-card card" data-index="{{index}}" bindtap="openDetail">
     <view class="news-top">
       <text class="pill">{{item.source}}</text>
       <text class="pill pill-green">{{item.score}}</text>
     </view>
     <text class="news-title">{{item.title}}</text>
     <text class="news-summary">{{item.summary || '暂无摘要，点击查看详情。'}}</text>
+  </view>
+
+  <view wx:if="{{filteredItems.length > 10}}" class="pager">
+    <button class="pager-btn" disabled="{{!canPrev}}" bindtap="prevPage">上一页</button>
+    <text>{{pageText}}</text>
+    <button class="pager-btn" disabled="{{!canNext}}" bindtap="nextPage">下一页</button>
   </view>
 </view>

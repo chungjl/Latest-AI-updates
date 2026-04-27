@@ -26,4 +26,5 @@
 
   <button class="primary-action" bindtap="toggleBookmark">{{bookmarked ? '取消收藏' : '收藏并加入专题追踪'}}</button>
   <button class="secondary-action" bindtap="copyLink">复制原文链接</button>
+  <button class="secondary-action" bindtap="shareText">复制分享文案</button>
 </view>

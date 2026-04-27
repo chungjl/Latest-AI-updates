@@ -12,8 +12,8 @@
   <view wx:for="{{trends}}" wx:key="name" class="trend-card card">
     <view class="trend-row">
       <text>{{item.name}}</text>
-      <text class="{{item.delta < 0 ? 'negative' : 'positive'}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}%</text>
+      <text class="{{item.deltaClass}}">{{item.deltaPrefix}}{{item.delta}}%</text>
     </view>
-    <view class="bar"><view class="{{item.delta < 0 ? 'red' : item.color}}" style="width: {{item.width}}%;"></view></view>
+    <view class="bar"><view class="{{item.barClass}}" style="width: {{item.width}}%;"></view></view>
   </view>
 </view>

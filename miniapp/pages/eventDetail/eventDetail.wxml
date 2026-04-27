@@ -1,0 +1,21 @@
+<view class="page">
+  <view class="nav">
+    <button class="nav-back" bindtap="goBack">‹</button>
+    <text class="nav-title">事件详情</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view wx:if="{{event}}" class="event-hero card">
+    <text class="event-title">{{event.title}}</text>
+    <text class="event-meta">{{event.category}} · {{event.article_count}} 条 · {{event.source_count}} 个来源</text>
+    <text class="event-summary">{{event.summary}}</text>
+  </view>
+
+  <text class="section-title">关联资讯</text>
+  <view wx:if="{{articles.length === 0}}" class="empty card">暂无关联资讯</view>
+  <view wx:for="{{articles}}" wx:key="id" class="article-card card" data-index="{{index}}" bindtap="openArticle">
+    <text class="pill">{{item.source}}</text>
+    <text class="article-title">{{item.title}}</text>
+    <text class="article-summary">{{item.summary || '暂无摘要，点击查看详情。'}}</text>
+  </view>
+</view>

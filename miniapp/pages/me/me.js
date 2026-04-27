@@ -20,6 +20,10 @@ Page({
   },
 
   openBookmarks() {
-    wx.switchTab({ url: "/pages/index/index" });
+    wx.navigateTo({ url: "/pages/bookmarks/bookmarks" });
+  },
+
+  openSettings() {
+    wx.navigateTo({ url: "/pages/settings/settings" });
   }
 });

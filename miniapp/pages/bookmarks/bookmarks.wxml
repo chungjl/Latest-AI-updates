@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="nav">
+    <button class="nav-back" bindtap="goBack">‹</button>
+    <text class="nav-title">我的收藏</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="hero">
+    <text class="hero-title">{{bookmarks.length}} 条收藏</text>
+    <text class="hero-subtitle">保留需要后续跟进的资讯和信号</text>
+  </view>
+
+  <view wx:if="{{bookmarks.length === 0}}" class="empty card">还没有收藏</view>
+  <view wx:for="{{bookmarks}}" wx:key="article_id" class="bookmark-card card" data-index="{{index}}" bindtap="openDetail">
+    <text class="bookmark-source">{{item.source}}</text>
+    <text class="bookmark-title">{{item.title}}</text>
+    <button catchtap="removeBookmark" data-id="{{item.article_id}}">取消收藏</button>
+  </view>
+</view>

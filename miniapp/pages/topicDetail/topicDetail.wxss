@@ -1,0 +1,32 @@
+.news-card {
+  display: block;
+  margin-top: 28rpx;
+  padding: 30rpx;
+}
+
+.news-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.news-title {
+  display: block;
+  margin-top: 26rpx;
+  color: #101828;
+  font-size: 32rpx;
+  line-height: 1.35;
+  font-weight: 950;
+}
+
+.news-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 22rpx;
+  color: #667085;
+  font-size: 26rpx;
+  line-height: 1.55;
+}

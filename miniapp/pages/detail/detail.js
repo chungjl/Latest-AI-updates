@@ -42,5 +42,10 @@ Page({
 
   copyLink() {
     wx.setClipboardData({ data: this.data.item.url || "" });
+  },
+
+  shareText() {
+    const item = this.data.item;
+    wx.setClipboardData({ data: `${item.title}\n${item.summary || ""}\n${item.url || ""}` });
   }
 });

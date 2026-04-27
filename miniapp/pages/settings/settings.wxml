@@ -1,0 +1,32 @@
+<view class="page">
+  <view class="nav">
+    <button class="nav-back" bindtap="goBack">‹</button>
+    <text class="nav-title">系统设置</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="setting-card card">
+    <view>
+      <text class="setting-name">自动刷新</text>
+      <text class="setting-meta">{{scheduleText}}</text>
+    </view>
+    <switch checked="{{schedulerEnabled}}" color="#6366F1" bindchange="toggleScheduler" />
+  </view>
+
+  <view class="setting-card card">
+    <view>
+      <text class="setting-name">每日简报</text>
+      <text class="setting-meta">{{briefText}}</text>
+    </view>
+    <button disabled="{{briefLoading}}" bindtap="generateBrief">{{briefButtonText}}</button>
+  </view>
+
+  <view class="history-card card">
+    <text class="setting-name">刷新历史</text>
+    <view wx:for="{{history}}" wx:key="started_at" class="history-row">
+      <text>{{item.trigger}}</text>
+      <text>{{item.new_items}} 新增</text>
+      <text>{{item.duration_seconds}}s</text>
+    </view>
+  </view>
+</view>

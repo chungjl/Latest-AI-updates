@@ -7,16 +7,25 @@ function normalizeItem(item) {
   };
 }
 
+const PAGE_SIZE = 10;
+
 Page({
   data: {
     query: "",
     activeCategory: "全部",
     items: [],
     filteredItems: [],
+    pagedItems: [],
     categories: [{ name: "全部" }],
     stats: { total: 0, high: 0, credibility: 91 },
     refreshJob: null,
-    refreshPercent: 0
+    refreshPercent: 0,
+    events: [],
+    currentPage: 1,
+    totalPages: 1,
+    pageText: "1 / 1",
+    canPrev: false,
+    canNext: false
   },
 
   onLoad() {
@@ -29,14 +38,25 @@ Page({
 
   async loadItems() {
     try {
-      const payload = await api.getItems();
+      const [payload, events] = await Promise.all([
+        api.getItems(),
+        api.getEvents(6).catch(() => [])
+      ]);
       const items = (payload.items || []).map(normalizeItem);
       const counts = new Map([["全部", items.length]]);
       items.forEach((item) => counts.set(item.category, (counts.get(item.category) || 0) + 1));
-      const categories = Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
+      const categories = Array.from(counts.entries()).map(([name, count]) => ({
+        name,
+        count,
+        activeClass: name === this.data.activeCategory ? "active" : ""
+      }));
       this.setData({
         items,
         categories,
+        events: (events || []).map((event) => ({
+          ...event,
+          meta: `${event.category} · ${event.article_count} 条 · ${event.source_count} 个来源`
+        })),
         stats: {
           total: items.length,
           high: items.filter((item) => item.importance >= 4).length,
@@ -54,25 +74,55 @@ Page({
     const active = this.data.activeCategory;
     const filteredItems = this.data.items
       .filter((item) => active === "全部" || item.category === active)
-      .filter((item) => !query || [item.title, item.summary, item.source, item.category].join(" ").toLowerCase().includes(query))
-      .slice(0, 30);
-    this.setData({ filteredItems });
+      .filter((item) => !query || [item.title, item.summary, item.source, item.category].join(" ").toLowerCase().includes(query));
+    const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+    const currentPage = Math.min(this.data.currentPage, totalPages);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    this.setData({
+      filteredItems,
+      pagedItems: filteredItems.slice(start, start + PAGE_SIZE),
+      totalPages,
+      currentPage,
+      pageText: `${currentPage} / ${totalPages}`,
+      canPrev: currentPage > 1,
+      canNext: currentPage < totalPages,
+      categories: this.data.categories.map((item) => ({
+        ...item,
+        activeClass: item.name === active ? "active" : ""
+      }))
+    });
   },
 
   onSearchInput(event) {
-    this.setData({ query: event.detail.value });
+    this.setData({ query: event.detail.value, currentPage: 1 });
     this.applyFilter();
   },
 
   selectCategory(event) {
-    this.setData({ activeCategory: event.currentTarget.dataset.name });
+    this.setData({ activeCategory: event.currentTarget.dataset.name, currentPage: 1 });
     this.applyFilter();
   },
 
   openDetail(event) {
-    const item = this.data.filteredItems[event.currentTarget.dataset.index];
+    const item = this.data.pagedItems[event.currentTarget.dataset.index];
     wx.setStorageSync("currentArticle", item);
     wx.navigateTo({ url: "/pages/detail/detail" });
+  },
+
+  openEvent(event) {
+    wx.navigateTo({ url: `/pages/eventDetail/eventDetail?id=${event.currentTarget.dataset.id}` });
+  },
+
+  prevPage() {
+    if (!this.data.canPrev) return;
+    this.setData({ currentPage: this.data.currentPage - 1 });
+    this.applyFilter();
+  },
+
+  nextPage() {
+    if (!this.data.canNext) return;
+    this.setData({ currentPage: this.data.currentPage + 1 });
+    this.applyFilter();
   },
 
   async refresh() {

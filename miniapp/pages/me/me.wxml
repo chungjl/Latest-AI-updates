@@ -19,14 +19,14 @@
     </view>
     <text>›</text>
   </view>
-  <view class="menu-card card">
+  <view class="menu-card card" bindtap="openSettings">
     <view>
       <text>推送设置</text>
       <text>每日简报 / 重要信号</text>
     </view>
     <text>›</text>
   </view>
-  <view class="menu-card card">
+  <view class="menu-card card" bindtap="openSettings">
     <view>
       <text>导出报告</text>
       <text>Markdown / PDF</text>

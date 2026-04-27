@@ -53,3 +53,27 @@
   font-size: 29rpx;
   font-weight: 900;
 }
+
+.create-card {
+  margin-top: 42rpx;
+  padding: 30rpx;
+}
+
+.create-title {
+  display: block;
+  margin-bottom: 22rpx;
+  color: #101828;
+  font-size: 30rpx;
+  font-weight: 950;
+}
+
+.create-card input {
+  height: 72rpx;
+  margin-bottom: 18rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid rgba(16, 24, 40, 0.08);
+  border-radius: 18rpx;
+  color: #101828;
+  background: #f8fafc;
+  font-size: 26rpx;
+}

@@ -19,8 +19,10 @@ Page({
     const trends = Array.from(counts.entries()).slice(0, 5).map(([category, count], index) => ({
       name: trendNames[index] || category,
       delta: index === 4 ? -6 : 42 - index * 7,
+      deltaPrefix: index === 4 ? "" : "+",
+      deltaClass: index === 4 ? "negative" : "positive",
       width: Math.max(32, Math.round((count / max) * 86)),
-      color: index === 1 ? "cyan" : index === 3 ? "amber" : "primary"
+      barClass: index === 4 ? "red" : index === 1 ? "cyan" : index === 3 ? "amber" : "primary"
     }));
     this.setData({ trends });
   }

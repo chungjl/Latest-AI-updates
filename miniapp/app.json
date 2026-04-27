@@ -2,9 +2,13 @@
   "pages": [
     "pages/index/index",
     "pages/detail/detail",
+    "pages/eventDetail/eventDetail",
     "pages/trends/trends",
     "pages/topics/topics",
+    "pages/topicDetail/topicDetail",
     "pages/channels/channels",
+    "pages/bookmarks/bookmarks",
+    "pages/settings/settings",
     "pages/me/me"
   ],
   "window": {

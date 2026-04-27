@@ -1,0 +1,52 @@
+.setting-card {
+  min-height: 132rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-top: 28rpx;
+  padding: 30rpx 34rpx;
+}
+
+.setting-name {
+  display: block;
+  color: #101828;
+  font-size: 31rpx;
+  font-weight: 950;
+}
+
+.setting-meta {
+  display: block;
+  margin-top: 12rpx;
+  color: #667085;
+  font-size: 24rpx;
+  line-height: 1.4;
+}
+
+.setting-card button {
+  width: 124rpx;
+  height: 58rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  color: #ffffff;
+  background: #101828;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.history-card {
+  margin-top: 34rpx;
+  padding: 30rpx 34rpx;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12rpx;
+  padding: 22rpx 0;
+  border-top: 2rpx solid rgba(16, 24, 40, 0.08);
+  color: #667085;
+  font-size: 24rpx;
+}

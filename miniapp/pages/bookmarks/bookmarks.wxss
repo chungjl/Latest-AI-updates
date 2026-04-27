@@ -1,0 +1,38 @@
+.bookmark-card {
+  display: block;
+  margin-top: 28rpx;
+  padding: 30rpx;
+}
+
+.bookmark-source {
+  display: inline-flex;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  font-size: 23rpx;
+  font-weight: 850;
+}
+
+.bookmark-title {
+  display: block;
+  margin-top: 24rpx;
+  color: #101828;
+  font-size: 32rpx;
+  line-height: 1.35;
+  font-weight: 950;
+}
+
+.bookmark-card button {
+  width: 156rpx;
+  height: 54rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 22rpx;
+  border-radius: 999rpx;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.1);
+  font-size: 24rpx;
+  font-weight: 850;
+}

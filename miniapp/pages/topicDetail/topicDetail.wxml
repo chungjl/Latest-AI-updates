@@ -1,0 +1,22 @@
+<view class="page">
+  <view class="nav">
+    <button class="nav-back" bindtap="goBack">‹</button>
+    <text class="nav-title">专题命中</text>
+    <button class="nav-more">•••</button>
+  </view>
+
+  <view class="hero">
+    <text class="hero-title">{{title}}</text>
+    <text class="hero-subtitle">该专题当前匹配 {{items.length}} 条资讯</text>
+  </view>
+
+  <view wx:if="{{items.length === 0}}" class="empty card">暂无命中文章</view>
+  <view wx:for="{{items}}" wx:key="id" class="news-card card" data-index="{{index}}" bindtap="openDetail">
+    <view class="news-top">
+      <text class="pill">{{item.source}}</text>
+      <text class="pill pill-green">{{item.category}}</text>
+    </view>
+    <text class="news-title">{{item.title}}</text>
+    <text class="news-summary">{{item.summary || '暂无摘要'}}</text>
+  </view>
+</view>

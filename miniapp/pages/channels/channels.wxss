@@ -21,3 +21,20 @@
   color: #667085;
   font-size: 25rpx;
 }
+
+.source-ok,
+.source-error {
+  display: block;
+  max-width: 520rpx;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+}
+
+.source-ok {
+  color: #047857;
+}
+
+.source-error {
+  color: #b45309;
+}

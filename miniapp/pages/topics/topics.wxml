@@ -18,5 +18,10 @@
     <text class="topic-status">{{item.enabled ? '升温' : '暂停'}}</text>
   </view>
 
-  <button class="primary-action" bindtap="openChannels">+ 新建追踪专题</button>
+  <view class="create-card card">
+    <text class="create-title">新建追踪专题</text>
+    <input placeholder="专题名称，例如 AI Agent" value="{{topicName}}" bindinput="onNameInput" />
+    <input placeholder="关键词，用逗号分隔" value="{{topicKeywords}}" bindinput="onKeywordsInput" />
+    <button class="primary-action" bindtap="createTopic">+ 新建追踪专题</button>
+  </view>
 </view>
