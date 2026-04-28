@@ -71,6 +71,7 @@ logger.setLevel(logging.INFO)
 LLM_API_KEY = os.getenv("AI_INTEL_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
 LLM_BASE_URL = os.getenv("AI_INTEL_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 LLM_MODEL = os.getenv("AI_INTEL_LLM_MODEL", "gpt-4o-mini")
+LLM_MAX_TOKENS = max(256, int(os.getenv("AI_INTEL_LLM_MAX_TOKENS", "1024")))
 
 DEFAULT_APP_CONFIG = {
     "scheduler": {
@@ -724,6 +725,7 @@ async def generate_llm_summary(item: dict[str, Any]) -> dict[str, str] | None:
                     "model": LLM_MODEL,
                     "messages": messages,
                     "temperature": 0.2,
+                    "max_tokens": LLM_MAX_TOKENS,
                     "response_format": {"type": "json_object"},
                 },
             )
