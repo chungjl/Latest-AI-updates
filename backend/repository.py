@@ -200,14 +200,14 @@ def list_articles(limit: int = 500) -> list[dict[str, Any]]:
         rows = conn.execute(
             """
             SELECT
-              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
               s.name AS source, s.type AS source_type, s.url AS source_url,
               sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
               sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
-            ORDER BY a.fetched_at DESC
+            ORDER BY a.created_at DESC
             LIMIT %s
             """,
             (limit,),
@@ -224,6 +224,7 @@ def article_row(row: dict[str, Any]) -> dict[str, Any]:
     item = dict(row)
     item["published_at"] = iso(item["published_at"])
     item["fetched_at"] = iso(item["fetched_at"])
+    item["created_at"] = iso(item.get("article_created_at") or item.get("created_at"))
     item["source"] = item.get("source") or "未知来源"
     item["source_type"] = item.get("source_type") or "媒体/博客"
     item["source_url"] = item.get("source_url") or item["url"]
@@ -448,13 +449,13 @@ def list_articles_without_summaries(limit: int = 20) -> list[dict[str, Any]]:
         rows = conn.execute(
             """
             SELECT
-              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
               s.name AS source, s.type AS source_type, s.url AS source_url
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE sm.article_id IS NULL
-            ORDER BY a.fetched_at DESC
+            ORDER BY a.created_at DESC
             LIMIT %s
             """,
             (limit,),
@@ -626,7 +627,7 @@ def get_event(event_id: str) -> dict[str, Any] | None:
         article_rows = conn.execute(
             """
             SELECT
-              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
               s.name AS source, s.type AS source_type, s.url AS source_url,
               sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
               sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
@@ -635,7 +636,7 @@ def get_event(event_id: str) -> dict[str, Any] | None:
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE ea.event_id = %s
-            ORDER BY a.fetched_at DESC
+            ORDER BY a.created_at DESC
             """,
             (event_id,),
         ).fetchall()
@@ -650,7 +651,7 @@ def search_articles(query: str, limit: int = 50) -> list[dict[str, Any]]:
         rows = conn.execute(
             """
             SELECT
-              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
               s.name AS source, s.type AS source_type, s.url AS source_url,
               sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
               sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
@@ -659,7 +660,7 @@ def search_articles(query: str, limit: int = 50) -> list[dict[str, Any]]:
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE a.title ILIKE %s OR a.summary ILIKE %s OR sm.one_liner ILIKE %s
                OR sm.why_important ILIKE %s OR s.name ILIKE %s OR a.category ILIKE %s
-            ORDER BY a.fetched_at DESC
+            ORDER BY a.created_at DESC
             LIMIT %s
             """,
             (pattern, pattern, pattern, pattern, pattern, pattern, limit),
@@ -694,7 +695,8 @@ def get_bookmark(article_id: str) -> dict[str, Any] | None:
         row = conn.execute(
             """
             SELECT b.article_id, b.note, b.created_at,
-                   a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+                   a.title, a.url, a.summary, a.published_at, a.category, a.importance,
+                   a.fetched_at, a.created_at AS article_created_at,
                    s.name AS source, s.type AS source_type, s.url AS source_url,
                    sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
                    sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
@@ -720,7 +722,8 @@ def list_bookmarks(limit: int = 50) -> list[dict[str, Any]]:
         rows = conn.execute(
             """
             SELECT b.article_id, b.note, b.created_at,
-                   a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+                   a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance,
+                   a.fetched_at, a.created_at AS article_created_at,
                    s.name AS source, s.type AS source_type, s.url AS source_url,
                    sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
                    sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
@@ -798,7 +801,7 @@ def topic_articles(topic_id: int, limit: int = 50) -> list[dict[str, Any]]:
         rows = conn.execute(
             f"""
             SELECT
-              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
               s.name AS source, s.type AS source_type, s.url AS source_url,
               sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
               sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
@@ -806,7 +809,7 @@ def topic_articles(topic_id: int, limit: int = 50) -> list[dict[str, Any]]:
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE {' OR '.join(clauses)}
-            ORDER BY a.fetched_at DESC
+            ORDER BY a.created_at DESC
             LIMIT %s
             """,
             values,

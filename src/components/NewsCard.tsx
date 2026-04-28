@@ -46,10 +46,10 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
       <footer className="newsFooter">
         <span>{item.category}</span>
         <span>{item.source_type}</span>
-        {item.fetched_at && (
+        {(item.created_at || item.fetched_at) && (
           <span>
             <Clock3 size={14} />
-            {formatDate(item.fetched_at)}
+            {formatDate(item.created_at || item.fetched_at)}
           </span>
         )}
       </footer>

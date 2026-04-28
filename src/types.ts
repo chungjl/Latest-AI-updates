@@ -5,6 +5,7 @@ export type NewsItem = {
   summary: string;
   published_at: string | null;
   fetched_at: string;
+  created_at?: string;
   source: string;
   source_type: string;
   category: string;
