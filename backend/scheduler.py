@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from contextlib import suppress
 from datetime import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .news import get_app_config, get_refresh_status, refresh_items, refresh_items_job, write_refresh_status
+
+logger = logging.getLogger("uvicorn.error")
 
 
 class RefreshScheduler:
@@ -42,7 +45,17 @@ class RefreshScheduler:
         job_id = uuid.uuid4().hex
         write_refresh_status({"running": True, "current_job_id": job_id, "last_error": None})
         self._refresh_task = asyncio.create_task(refresh_items_job(job_id, trigger=trigger), name=f"refresh-job-{job_id}")
+        self._refresh_task.add_done_callback(self._handle_refresh_done)
         return {"status": "running", "job_id": job_id}
+
+    def _handle_refresh_done(self, task: asyncio.Task) -> None:
+        if task.cancelled():
+            write_refresh_status({"running": False, "last_error": {"source": "refresh-job", "error": "cancelled"}})
+            return
+        exc = task.exception()
+        if exc:
+            logger.error("Background refresh task crashed", exc_info=(type(exc), exc, exc.__traceback__))
+            write_refresh_status({"running": False, "last_error": {"source": "refresh-job", "error": type(exc).__name__}})
 
     async def _run(self) -> None:
         while not self._stopped.is_set():
