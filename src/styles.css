@@ -624,6 +624,7 @@ button {
 }
 
 .feedHeader {
+  min-height: 72px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -877,7 +878,11 @@ button {
   display: grid;
   gap: 30px;
   align-content: start;
-  padding-top: 98px;
+}
+
+.railHeader {
+  min-height: 72px;
+  margin-bottom: -4px;
 }
 
 .panel {

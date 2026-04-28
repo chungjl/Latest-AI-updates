@@ -337,6 +337,7 @@ function App() {
               </section>
 
               <aside className="rightRail">
+                <div className="railHeader" aria-hidden="true" />
                 <DailyBriefPanel brief={dailyBrief} loading={briefLoading} onGenerate={generateBrief} />
                 <EventPanel events={events} />
                 <TrendPanel categories={categories} items={payload.items} />
