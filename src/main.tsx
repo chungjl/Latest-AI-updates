@@ -24,7 +24,7 @@ function App() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState("brief");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) !== "false");
   const [page, setPage] = useState(1);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [schedulerSaving, setSchedulerSaving] = useState(false);
