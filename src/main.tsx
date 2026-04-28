@@ -334,16 +334,6 @@ function App() {
               <aside className="rightRail">
                 <DailyBriefPanel brief={dailyBrief} loading={briefLoading} onGenerate={generateBrief} />
                 <EventPanel events={events} />
-                <TopicPanel
-                  topics={topics}
-                  topicName={topicName}
-                  topicKeywords={topicKeywords}
-                  saving={topicSaving}
-                  onTopicNameChange={setTopicName}
-                  onTopicKeywordsChange={setTopicKeywords}
-                  onCreateTopic={createTopic}
-                />
-                <BookmarkPanel bookmarks={bookmarks} />
                 <TrendPanel categories={categories} items={payload.items} />
                 <SourceHealthPanel
                   payload={payload}

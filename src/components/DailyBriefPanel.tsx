@@ -21,7 +21,7 @@ export function DailyBriefPanel({ brief, loading, onGenerate }: DailyBriefPanelP
 
       {brief?.highlights?.length ? (
         <div className="briefList">
-          {brief.highlights.slice(0, 3).map((item) => (
+          {brief.highlights.slice(0, 2).map((item) => (
             <a href={item.url} key={item.url} target="_blank" rel="noreferrer">
               <span>{item.source || item.category || "AI 情报"}</span>
               <strong>{item.one_liner}</strong>

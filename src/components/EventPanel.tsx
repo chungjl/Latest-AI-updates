@@ -17,7 +17,7 @@ export function EventPanel({ events }: EventPanelProps) {
       </div>
 
       <div className="eventList">
-        {events.slice(0, 4).map((event) => (
+        {events.slice(0, 3).map((event) => (
           <a key={event.id} className="eventItem" href={`/api/events/${event.id}`} target="_blank" rel="noreferrer">
             <span className="eventIcon">
               <Layers3 size={15} />

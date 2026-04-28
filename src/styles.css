@@ -875,13 +875,14 @@ button {
 
 .rightRail {
   display: grid;
-  gap: 30px;
+  gap: 24px;
+  align-content: start;
 }
 
 .panel {
-  padding: 30px;
+  padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 32px;
+  border-radius: 28px;
   background: rgba(255, 255, 255, 0.88);
   box-shadow: var(--shadow);
 }
@@ -891,11 +892,11 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 34px;
+  margin-bottom: 22px;
 }
 
 .panelHeader h3 {
-  font-size: 34px;
+  font-size: 26px;
   line-height: 1.1;
 }
 
@@ -1047,7 +1048,7 @@ button {
 
 .trendBars {
   display: grid;
-  gap: 32px;
+  gap: 18px;
 }
 
 .trendRow > div:first-child,
@@ -1056,7 +1057,7 @@ button {
   justify-content: space-between;
   gap: 18px;
   color: var(--ink);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 900;
 }
 
@@ -1069,8 +1070,8 @@ button {
 }
 
 .barTrack {
-  height: 10px;
-  margin-top: 16px;
+  height: 8px;
+  margin-top: 10px;
   border-radius: 999px;
   background: #e4e7ec;
   overflow: hidden;
@@ -1255,12 +1256,12 @@ button {
 
 .briefList {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .briefList a {
   display: block;
-  padding: 14px 0;
+  padding: 12px 0;
   border-top: 1px solid rgba(16, 24, 40, 0.08);
   color: var(--ink);
   text-decoration: none;
@@ -1284,7 +1285,7 @@ button {
 
 .briefList strong {
   display: block;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.35;
 }
 
@@ -1292,7 +1293,7 @@ button {
 .briefEmpty {
   margin: 8px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.55;
 }
 

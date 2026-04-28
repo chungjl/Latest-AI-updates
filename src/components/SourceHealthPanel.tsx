@@ -13,10 +13,10 @@ type SourceHealthPanelProps = {
 export function SourceHealthPanel({ payload, items, status, onSchedulerToggle, schedulerSaving }: SourceHealthPanelProps) {
   const sourceCounts = new Map<string, number>();
   for (const item of items) sourceCounts.set(item.source, (sourceCounts.get(item.source) || 0) + 1);
-  const topSources = [...sourceCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topSources = [...sourceCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
   const errors = payload.errors || [];
   const scheduler = status?.config.scheduler;
-  const history = status?.refresh_history.slice(0, 3) || [];
+  const history = status?.refresh_history.slice(0, 2) || [];
 
   return (
     <section className="panel sourcePanel">
@@ -51,9 +51,6 @@ export function SourceHealthPanel({ payload, items, status, onSchedulerToggle, s
           <span>计划时间</span>
           <strong>{scheduler ? scheduler.daily_times.join(" / ") : "--"}</strong>
         </div>
-        <p className="healthNote">
-          正常表示最近一次刷新中所有来源都可访问并成功解析；异常通常是来源临时不可用、网络超时、RSS 地址变更或目标站限制访问。
-        </p>
       </div>
 
       <div className="sourceList">

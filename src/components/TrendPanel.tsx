@@ -9,7 +9,7 @@ type TrendPanelProps = {
 const trendNames = ["Agentic Workflow", "端侧多模态", "AI Browser", "RAG 评测", "GPU 供给"];
 
 export function TrendPanel({ categories }: TrendPanelProps) {
-  const topCategories = categories.filter(([category]) => category !== "全部").slice(0, 5);
+  const topCategories = categories.filter(([category]) => category !== "全部").slice(0, 4);
   const maxCount = Math.max(...topCategories.map(([, count]) => count), 1);
 
   return (
