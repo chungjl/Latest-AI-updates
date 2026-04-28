@@ -474,6 +474,12 @@ button {
   align-items: center;
   overflow-x: auto;
   padding: 0 0 22px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.categoryFilter::-webkit-scrollbar {
+  display: none;
 }
 
 .refreshProgress {
