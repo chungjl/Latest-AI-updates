@@ -41,11 +41,7 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
         )}
       </div>
 
-      <div className="aiDigest">
-        <span>原始标题</span>
-        <p>{item.title}</p>
-        {whyImportant && <small>{whyImportant}</small>}
-      </div>
+      {whyImportant && <p className="newsInsight">{whyImportant}</p>}
 
       <footer className="newsFooter">
         <span>{item.category}</span>
