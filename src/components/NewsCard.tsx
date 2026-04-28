@@ -1,7 +1,7 @@
 import type React from "react";
 import { ArrowUpRight, Bookmark, BookmarkCheck, Clock3, ShieldCheck } from "lucide-react";
 import type { NewsItem } from "../types";
-import { formatDate, getItemTime } from "../utils";
+import { formatDate } from "../utils";
 
 type NewsCardProps = {
   item: NewsItem;
@@ -50,10 +50,12 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
       <footer className="newsFooter">
         <span>{item.category}</span>
         <span>{item.source_type}</span>
-        <span>
-          <Clock3 size={14} />
-          {formatDate(getItemTime(item))}
-        </span>
+        {item.published_at && (
+          <span>
+            <Clock3 size={14} />
+            {formatDate(item.published_at)}
+          </span>
+        )}
       </footer>
     </article>
   );
