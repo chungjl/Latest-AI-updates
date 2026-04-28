@@ -17,6 +17,6 @@
       <text class="pill pill-green">{{item.category}}</text>
     </view>
     <text class="news-title">{{item.title}}</text>
-    <text class="news-summary">{{item.summary || '暂无摘要'}}</text>
+    <text class="news-summary">{{item.readableSummary}}</text>
   </view>
 </view>

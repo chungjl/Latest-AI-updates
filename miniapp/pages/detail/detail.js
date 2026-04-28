@@ -10,7 +10,12 @@ Page({
   onLoad() {
     const item = wx.getStorageSync("currentArticle") || {};
     this.setData({
-      item,
+      item: {
+        ...item,
+        readableSummary: item.ai_one_liner || item.summary || "暂无中文解读，建议复制原文链接后在浏览器查看。",
+        readableWhy: item.ai_why_important || "这条资讯已保留原文链接，建议结合来源可信度和发布时间判断是否需要继续跟踪。",
+        readableAudience: item.ai_audience || "关注 AI 产品和技术变化的用户"
+      },
       score: Math.max(70, (item.importance || 1) * 18)
     });
     this.loadBookmarkState(item.id);
@@ -46,6 +51,6 @@ Page({
 
   shareText() {
     const item = this.data.item;
-    wx.setClipboardData({ data: `${item.title}\n${item.summary || ""}\n${item.url || ""}` });
+    wx.setClipboardData({ data: `${item.title}\n${item.readableSummary || item.summary || ""}\n${item.url || ""}` });
   }
 });

@@ -9,6 +9,11 @@ export type NewsItem = {
   source_type: string;
   category: string;
   importance: number;
+  ai_one_liner?: string;
+  ai_why_important?: string;
+  ai_audience?: string;
+  ai_provider?: string;
+  ai_model?: string;
 };
 
 export type ApiPayload = {

@@ -1,5 +1,12 @@
 const api = require("../../utils/api");
 
+function normalizeArticle(item) {
+  return {
+    ...item,
+    readableSummary: item.ai_one_liner || item.summary || "暂无中文解读，点击查看详情。"
+  };
+}
+
 Page({
   data: {
     id: "",
@@ -18,7 +25,7 @@ Page({
       const event = await api.getEventDetail(id);
       this.setData({
         event,
-        articles: event && event.articles ? event.articles : []
+        articles: event && event.articles ? event.articles.map(normalizeArticle) : []
       });
     } catch (error) {
       wx.showToast({ title: "加载失败", icon: "none" });

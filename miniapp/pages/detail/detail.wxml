@@ -15,14 +15,15 @@
   </view>
 
   <view class="summary card">
-    <text class="summary-title">AI 摘要</text>
-    <text class="summary-text">{{item.summary || '暂无摘要，建议复制原文链接后在浏览器查看。'}}</text>
+    <text class="summary-title">中文解读</text>
+    <text class="summary-text">{{item.readableSummary}}</text>
+    <text class="summary-note">{{item.readableWhy}}</text>
   </view>
 
   <text class="section-title">关键信号</text>
   <view class="signal card">• {{item.category || '综合资讯'}} 方向出现新动态</view>
   <view class="signal card">• 来源为 {{item.source || '未知来源'}}，建议结合原文判断</view>
-  <view class="signal card">• 适合加入专题追踪或收藏后续观察</view>
+  <view class="signal card">• 适合{{item.readableAudience}}关注</view>
 
   <button class="primary-action" bindtap="toggleBookmark">{{bookmarked ? '取消收藏' : '收藏并加入专题追踪'}}</button>
   <button class="secondary-action" bindtap="copyLink">复制原文链接</button>

@@ -11,6 +11,8 @@ type NewsCardProps = {
 
 export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps) {
   const accent = accentForCategory(item.category);
+  const readableSummary = item.ai_one_liner || item.summary || "暂无摘要，点击标题查看原文。";
+  const whyImportant = item.ai_why_important;
 
   return (
     <article className="newsCard" style={{ "--card-accent": accent } as React.CSSProperties}>
@@ -39,7 +41,11 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
         )}
       </div>
 
-      <p className="newsSummary">{item.summary || "暂无摘要，点击标题查看原文。"}</p>
+      <div className="aiDigest">
+        <span>中文解读</span>
+        <p>{readableSummary}</p>
+        {whyImportant && <small>{whyImportant}</small>}
+      </div>
 
       <footer className="newsFooter">
         <span>{item.category}</span>

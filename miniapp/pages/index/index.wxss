@@ -145,15 +145,37 @@
   font-weight: 950;
 }
 
-.news-summary {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.ai-digest {
+  display: block;
   margin-top: 30rpx;
+  padding: 24rpx;
+  border: 2rpx solid rgba(99, 102, 241, 0.12);
+  border-radius: 24rpx;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.ai-digest text:first-child {
+  display: block;
+  color: #6366f1;
+  font-size: 23rpx;
+  font-weight: 950;
+}
+
+.ai-digest text:nth-child(2) {
+  display: block;
+  margin-top: 12rpx;
+  color: #101828;
+  font-size: 28rpx;
+  line-height: 1.45;
+  font-weight: 850;
+}
+
+.ai-digest text:last-child {
+  display: block;
+  margin-top: 14rpx;
   color: #667085;
-  font-size: 27rpx;
-  line-height: 1.55;
+  font-size: 25rpx;
+  line-height: 1.5;
 }
 
 .refresh-card {

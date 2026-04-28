@@ -16,6 +16,6 @@
   <view wx:for="{{articles}}" wx:key="id" class="article-card card" data-index="{{index}}" bindtap="openArticle">
     <text class="pill">{{item.source}}</text>
     <text class="article-title">{{item.title}}</text>
-    <text class="article-summary">{{item.summary || '暂无摘要，点击查看详情。'}}</text>
+    <text class="article-summary">{{item.readableSummary}}</text>
   </view>
 </view>

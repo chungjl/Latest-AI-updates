@@ -3,7 +3,9 @@ const api = require("../../utils/api");
 function normalizeItem(item) {
   return {
     ...item,
-    score: Math.max(70, (item.importance || 1) * 18)
+    score: Math.max(70, (item.importance || 1) * 18),
+    readableSummary: item.ai_one_liner || item.summary || "暂无中文解读，点击查看详情。",
+    readableWhy: item.ai_why_important || ""
   };
 }
 
@@ -74,7 +76,7 @@ Page({
     const active = this.data.activeCategory;
     const filteredItems = this.data.items
       .filter((item) => active === "全部" || item.category === active)
-      .filter((item) => !query || [item.title, item.summary, item.source, item.category].join(" ").toLowerCase().includes(query));
+      .filter((item) => !query || [item.title, item.summary, item.ai_one_liner, item.ai_why_important, item.source, item.category].join(" ").toLowerCase().includes(query));
     const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
     const currentPage = Math.min(this.data.currentPage, totalPages);
     const start = (currentPage - 1) * PAGE_SIZE;

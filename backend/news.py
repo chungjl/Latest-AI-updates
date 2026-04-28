@@ -68,6 +68,9 @@ SKIP_FAILED_SOURCES_THRESHOLD = max(0, int(os.getenv("AI_INTEL_SKIP_FAILED_SOURC
 USER_AGENT = "Latest-AI-updates/0.2 (+FastAPI React AI news dashboard)"
 logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
+LLM_API_KEY = os.getenv("AI_INTEL_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+LLM_BASE_URL = os.getenv("AI_INTEL_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+LLM_MODEL = os.getenv("AI_INTEL_LLM_MODEL", "gpt-4o-mini")
 
 DEFAULT_APP_CONFIG = {
     "scheduler": {
@@ -399,6 +402,7 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
             update_source_health(result["source"], False, result["error"])
 
     new_items, stored = upsert_articles(fetched_items)
+    await generate_summaries(50)
     items = list_articles()
     payload = {
         "last_updated": utc_now(),
@@ -516,6 +520,7 @@ async def refresh_items_job(job_id: str, trigger: str = "manual") -> dict[str, A
                 },
             )
 
+    await generate_summaries(50)
     items = list_articles()
     stored = len(items)
     finished_at = utc_now()
@@ -647,13 +652,31 @@ def ensure_bootstrap() -> None:
         upsert_setting("app_config", load_json(APP_CONFIG_FILE, DEFAULT_APP_CONFIG))
 
 
+def is_mostly_chinese(text: str) -> bool:
+    if not text:
+        return False
+    chinese_chars = len(re.findall(r"[\u4e00-\u9fff]", text))
+    return chinese_chars >= max(4, len(text) * 0.18)
+
+
+def compact_text(text: str, limit: int = 160) -> str:
+    value = re.sub(r"\s+", " ", text or "").strip()
+    return value if len(value) <= limit else value[: limit - 1].rstrip() + "…"
+
+
 def generate_local_summary(item: dict[str, Any]) -> dict[str, str]:
     subject = item["title"].strip()
     summary = item.get("summary") or subject
-    one_liner = subject if len(subject) <= 80 else subject[:77].rstrip() + "..."
-    why = f"该动态来自{item.get('source', '可信来源')}，属于{item.get('category', '综合资讯')}方向，可能影响相关产品、研发或采购判断。"
+    category = item.get("category", "综合资讯")
+    source = item.get("source", "可信来源")
+    if is_mostly_chinese(subject):
+        one_liner = compact_text(subject, 90)
+    else:
+        one_liner = f"{category}方向有新动态：{compact_text(subject, 76)}"
+    context = compact_text(summary, 180)
+    why = f"这条消息来自{source}，可作为判断{category}趋势的参考。重点关注它是否会影响你使用的产品、开发工具、模型能力或后续采购选择。"
     if item.get("importance", 1) >= 4:
-        why = f"这是高优先级信号：{why}"
+        why = f"这是高优先级信号。{why}"
     audience = "AI 产品、研发、运营和关注行业变化的决策者"
     if "开发" in item.get("category", ""):
         audience = "开发者、技术负责人和工具链使用者"
@@ -663,22 +686,75 @@ def generate_local_summary(item: dict[str, Any]) -> dict[str, str]:
         "one_liner": one_liner,
         "why_important": why,
         "audience": audience,
-        "context": summary,
+        "context": context,
     }
+
+
+async def generate_llm_summary(item: dict[str, Any]) -> dict[str, str] | None:
+    if not LLM_API_KEY:
+        return None
+    prompt = {
+        "title": item.get("title", ""),
+        "source": item.get("source", ""),
+        "category": item.get("category", ""),
+        "summary": item.get("summary", ""),
+        "url": item.get("url", ""),
+    }
+    messages = [
+        {
+            "role": "system",
+            "content": "你是面向中文个人用户的 AI 资讯编辑。请把英文或中文资讯提炼成容易理解的中文，不要夸大，不要编造。",
+        },
+        {
+            "role": "user",
+            "content": (
+                "基于下面资讯，输出 JSON，字段为 one_liner、why_important、audience。"
+                "one_liner 用一句中文说明发生了什么；why_important 用 1-2 句说明对普通 AI 使用者或开发者的影响；"
+                "audience 说明适合谁关注。\n\n"
+                f"{json.dumps(prompt, ensure_ascii=False)}"
+            ),
+        },
+    ]
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(
+                f"{LLM_BASE_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {LLM_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "model": LLM_MODEL,
+                    "messages": messages,
+                    "temperature": 0.2,
+                    "response_format": {"type": "json_object"},
+                },
+            )
+            response.raise_for_status()
+        content = response.json()["choices"][0]["message"]["content"]
+        data = json.loads(content)
+        if not data.get("one_liner") or not data.get("why_important"):
+            return None
+        return {
+            "one_liner": compact_text(str(data["one_liner"]), 140),
+            "why_important": compact_text(str(data["why_important"]), 260),
+            "audience": compact_text(str(data.get("audience") or "关注 AI 产品和技术变化的用户"), 120),
+        }
+    except Exception as exc:
+        logger.warning("LLM summary failed for %s: %s", item.get("id"), exc)
+        return None
 
 
 async def generate_summaries(limit: int = 20) -> dict[str, Any]:
     ensure_bootstrap()
     items = list_articles_without_summaries(limit)
     for item in items:
-        summary = generate_local_summary(item)
+        llm_summary = await generate_llm_summary(item)
+        summary = llm_summary or generate_local_summary(item)
         upsert_summary(
             item["id"],
             summary["one_liner"],
             summary["why_important"],
             summary["audience"],
-            "local",
-            "rule-based",
+            "llm" if llm_summary else "local",
+            LLM_MODEL if llm_summary else "rule-based",
         )
     return {"generated": len(items), "items": list_summaries(limit)}
 

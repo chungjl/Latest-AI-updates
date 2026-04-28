@@ -57,7 +57,11 @@
       <text class="pill pill-green">{{item.score}}</text>
     </view>
     <text class="news-title">{{item.title}}</text>
-    <text class="news-summary">{{item.summary || '暂无摘要，点击查看详情。'}}</text>
+    <view class="ai-digest">
+      <text>中文解读</text>
+      <text>{{item.readableSummary}}</text>
+      <text wx:if="{{item.readableWhy}}">{{item.readableWhy}}</text>
+    </view>
   </view>
 
   <view wx:if="{{filteredItems.length > 10}}" class="pager">

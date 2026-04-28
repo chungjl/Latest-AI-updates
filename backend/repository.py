@@ -201,9 +201,12 @@ def list_articles(limit: int = 500) -> list[dict[str, Any]]:
             """
             SELECT
               a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-              s.name AS source, s.type AS source_type, s.url AS source_url
+              s.name AS source, s.type AS source_type, s.url AS source_url,
+              sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+              sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
             ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
             LIMIT %s
             """,
@@ -224,6 +227,11 @@ def article_row(row: dict[str, Any]) -> dict[str, Any]:
     item["source"] = item.get("source") or "未知来源"
     item["source_type"] = item.get("source_type") or "媒体/博客"
     item["source_url"] = item.get("source_url") or item["url"]
+    item["ai_one_liner"] = item.get("ai_one_liner") or ""
+    item["ai_why_important"] = item.get("ai_why_important") or ""
+    item["ai_audience"] = item.get("ai_audience") or ""
+    item["ai_provider"] = item.get("ai_provider") or ""
+    item["ai_model"] = item.get("ai_model") or ""
     return item
 
 
@@ -619,10 +627,13 @@ def get_event(event_id: str) -> dict[str, Any] | None:
             """
             SELECT
               a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-              s.name AS source, s.type AS source_type, s.url AS source_url
+              s.name AS source, s.type AS source_type, s.url AS source_url,
+              sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+              sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM event_articles ea
             JOIN articles a ON a.id = ea.article_id
             LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE ea.event_id = %s
             ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
             """,
@@ -640,14 +651,18 @@ def search_articles(query: str, limit: int = 50) -> list[dict[str, Any]]:
             """
             SELECT
               a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-              s.name AS source, s.type AS source_type, s.url AS source_url
+              s.name AS source, s.type AS source_type, s.url AS source_url,
+              sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+              sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
-            WHERE a.title ILIKE %s OR a.summary ILIKE %s OR s.name ILIKE %s OR a.category ILIKE %s
+            LEFT JOIN summaries sm ON sm.article_id = a.id
+            WHERE a.title ILIKE %s OR a.summary ILIKE %s OR sm.one_liner ILIKE %s
+               OR sm.why_important ILIKE %s OR s.name ILIKE %s OR a.category ILIKE %s
             ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
             LIMIT %s
             """,
-            (pattern, pattern, pattern, pattern, limit),
+            (pattern, pattern, pattern, pattern, pattern, pattern, limit),
         ).fetchall()
     return [article_row(row) for row in rows]
 
@@ -680,10 +695,13 @@ def get_bookmark(article_id: str) -> dict[str, Any] | None:
             """
             SELECT b.article_id, b.note, b.created_at,
                    a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-                   s.name AS source, s.type AS source_type, s.url AS source_url
+                   s.name AS source, s.type AS source_type, s.url AS source_url,
+                   sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+                   sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM bookmarks b
             JOIN articles a ON a.id = b.article_id
             LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE b.article_id = %s
             """,
             (article_id,),
@@ -703,10 +721,13 @@ def list_bookmarks(limit: int = 50) -> list[dict[str, Any]]:
             """
             SELECT b.article_id, b.note, b.created_at,
                    a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-                   s.name AS source, s.type AS source_type, s.url AS source_url
+                   s.name AS source, s.type AS source_type, s.url AS source_url,
+                   sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+                   sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM bookmarks b
             JOIN articles a ON a.id = b.article_id
             LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
             ORDER BY b.created_at DESC
             LIMIT %s
             """,
@@ -771,16 +792,19 @@ def topic_articles(topic_id: int, limit: int = 50) -> list[dict[str, Any]]:
         values: list[Any] = []
         for keyword in keywords:
             pattern = f"%{keyword}%"
-            clauses.append("(a.title ILIKE %s OR a.summary ILIKE %s OR a.category ILIKE %s)")
-            values.extend([pattern, pattern, pattern])
+            clauses.append("(a.title ILIKE %s OR a.summary ILIKE %s OR sm.one_liner ILIKE %s OR sm.why_important ILIKE %s OR a.category ILIKE %s)")
+            values.extend([pattern, pattern, pattern, pattern, pattern])
         values.append(limit)
         rows = conn.execute(
             f"""
             SELECT
               a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at,
-              s.name AS source, s.type AS source_type, s.url AS source_url
+              s.name AS source, s.type AS source_type, s.url AS source_url,
+              sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+              sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE {' OR '.join(clauses)}
             ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
             LIMIT %s
