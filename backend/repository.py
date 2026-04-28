@@ -174,7 +174,7 @@ def upsert_articles(items: list[dict[str, Any]]) -> tuple[int, int]:
                   published_at = COALESCE(EXCLUDED.published_at, articles.published_at),
                   category = EXCLUDED.category,
                   importance = EXCLUDED.importance,
-                  fetched_at = EXCLUDED.fetched_at,
+                  fetched_at = COALESCE(articles.fetched_at, EXCLUDED.fetched_at),
                   raw = EXCLUDED.raw,
                   updated_at = now()
                 """,
