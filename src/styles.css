@@ -57,7 +57,8 @@ button {
   min-height: 100vh;
   margin: 0 auto;
   padding: 44px 34px 42px;
-  transition: grid-template-columns 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: grid-template-columns 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: grid-template-columns;
 }
 
 .appShell.sidebarCollapsed {
@@ -78,9 +79,10 @@ button {
   box-shadow: var(--shadow);
   overflow: visible;
   transition:
-    width 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    padding 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-radius 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+    padding 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.34s ease;
+  will-change: padding, border-radius;
 }
 
 .sidebarToggle {
@@ -97,10 +99,18 @@ button {
   color: var(--ink);
   background: #fff;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.sidebarToggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
 }
 
 .sidebarToggle svg {
-  transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sidebar.isCollapsed {
@@ -117,6 +127,10 @@ button {
   gap: 15px;
   margin-bottom: clamp(20px, 3vh, 34px);
   padding: 8px 8px 0;
+  transition:
+    gap 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    margin 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .brandBlock > div:last-child,
@@ -125,9 +139,14 @@ button {
 .sideInsight span,
 .sideInsight button span,
 .sideFoot {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
   transition:
-    opacity 0.16s ease,
-    transform 0.2s ease;
+    opacity 0.18s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: 0.08s;
 }
 
 .brandIcon {
@@ -137,6 +156,10 @@ button {
   place-items: center;
   border-radius: 16px;
   background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  flex: 0 0 auto;
+  transition:
+    border-radius 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .brandBlock h1 {
@@ -155,6 +178,7 @@ button {
 .sideNav {
   display: grid;
   gap: clamp(8px, 1.8vh, 16px);
+  transition: gap 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sideNavItem {
@@ -170,6 +194,13 @@ button {
   background: transparent;
   font-size: 16px;
   font-weight: 750;
+  overflow: hidden;
+  transition:
+    gap 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .sideNavItem svg {
@@ -188,6 +219,11 @@ button {
   border-radius: 28px;
   border: 1px solid rgba(148, 163, 184, 0.28);
   background: rgba(30, 41, 59, 0.72);
+  overflow: hidden;
+  transition:
+    min-height 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sideInsight > svg {
@@ -224,6 +260,9 @@ button {
   color: var(--ink);
   background: #fff;
   font-weight: 850;
+  transition:
+    width 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+    gap 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sideFoot {
@@ -237,6 +276,7 @@ button {
   justify-content: center;
   padding: 0;
   margin-bottom: 34px;
+  gap: 0;
 }
 
 .sidebar.isCollapsed .brandIcon {
@@ -250,10 +290,11 @@ button {
 .sidebar.isCollapsed .sideInsight span,
 .sidebar.isCollapsed .sideInsight button span,
 .sidebar.isCollapsed .sideFoot {
+  max-width: 0;
   opacity: 0;
   pointer-events: none;
-  position: absolute;
   transform: translateX(-8px);
+  transition-delay: 0s;
 }
 
 .sidebar.isCollapsed .sideNav {
@@ -310,6 +351,7 @@ button {
 .sidebar.isCollapsed .sideInsight button {
   width: 42px;
   padding: 0;
+  gap: 0;
 }
 
 .content {
