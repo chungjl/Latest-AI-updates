@@ -11,7 +11,7 @@ type NewsCardProps = {
 
 export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps) {
   const accent = accentForCategory(item.category);
-  const primaryTitle = item.ai_one_liner || item.title;
+  const primaryTitle = item.ai_one_liner || "中文解读生成中";
   const whyImportant = item.ai_why_important;
 
   return (

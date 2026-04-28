@@ -31,6 +31,7 @@ function App() {
   const [dailyBrief, setDailyBrief] = useState<DailyBrief | null>(null);
   const [briefLoading, setBriefLoading] = useState(false);
   const [refreshJob, setRefreshJob] = useState<RefreshJob | null>(null);
+  const [summaryPollingUntil, setSummaryPollingUntil] = useState(0);
   const [events, setEvents] = useState<IntelEvent[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -192,11 +193,25 @@ function App() {
       await loadProductData();
       if (!job.status.startsWith("running")) {
         setLoading(false);
+        setSummaryPollingUntil(Date.now() + 90_000);
         window.clearInterval(timer);
       }
     }, 3000);
     return () => window.clearInterval(timer);
   }, [loading, refreshJob?.id]);
+
+  useEffect(() => {
+    if (!summaryPollingUntil) return;
+    const timer = window.setInterval(async () => {
+      if (Date.now() >= summaryPollingUntil) {
+        setSummaryPollingUntil(0);
+        window.clearInterval(timer);
+        return;
+      }
+      await loadItems();
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [summaryPollingUntil]);
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>([["全部", payload.items.length]]);

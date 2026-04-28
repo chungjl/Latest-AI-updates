@@ -76,6 +76,8 @@ LLM_API_KEY = os.getenv("AI_INTEL_LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
 LLM_BASE_URL = os.getenv("AI_INTEL_LLM_BASE_URL", "https://api.openai.com/v1").rstrip("/")
 LLM_MODEL = os.getenv("AI_INTEL_LLM_MODEL", "gpt-4o-mini")
 LLM_MAX_TOKENS = max(256, int(os.getenv("AI_INTEL_LLM_MAX_TOKENS", "1024")))
+SUMMARY_ENRICH_LIMIT = max(20, int(os.getenv("AI_INTEL_SUMMARY_ENRICH_LIMIT", "200")))
+SUMMARY_CONCURRENCY = max(1, int(os.getenv("AI_INTEL_SUMMARY_CONCURRENCY", "3")))
 
 DEFAULT_APP_CONFIG = {
     "scheduler": {
@@ -436,7 +438,7 @@ async def refresh_items(trigger: str = "manual") -> dict[str, Any]:
     }
     record_refresh_history(history_entry)
     rebuild_events()
-    asyncio.create_task(enrich_summaries_background(50))
+    asyncio.create_task(enrich_summaries_background(SUMMARY_ENRICH_LIMIT))
     write_refresh_status(
         {
             "running": False,
@@ -569,7 +571,7 @@ async def refresh_items_job(job_id: str, trigger: str = "manual") -> dict[str, A
         }
     )
     result = finish_refresh_job(job_id, "completed" if not errors else "completed_with_errors", stored) or history_entry
-    asyncio.create_task(enrich_summaries_background(50))
+    asyncio.create_task(enrich_summaries_background(SUMMARY_ENRICH_LIMIT))
     return result
 
 
@@ -770,17 +772,22 @@ async def generate_llm_summary(item: dict[str, Any]) -> dict[str, str] | None:
 async def generate_summaries(limit: int = 20) -> dict[str, Any]:
     ensure_bootstrap()
     items = list_articles_without_summaries(limit)
-    for item in items:
-        llm_summary = await generate_llm_summary(item)
-        summary = llm_summary or generate_local_summary(item)
-        upsert_summary(
-            item["id"],
-            summary["one_liner"],
-            summary["why_important"],
-            summary["audience"],
-            "llm" if llm_summary else "local",
-            LLM_MODEL if llm_summary else "rule-based",
-        )
+
+    async def summarize_item(item: dict[str, Any], semaphore: asyncio.Semaphore) -> None:
+        async with semaphore:
+            llm_summary = await generate_llm_summary(item)
+            summary = llm_summary or generate_local_summary(item)
+            upsert_summary(
+                item["id"],
+                summary["one_liner"],
+                summary["why_important"],
+                summary["audience"],
+                "llm" if llm_summary else "local",
+                LLM_MODEL if llm_summary else "rule-based",
+            )
+
+    semaphore = asyncio.Semaphore(SUMMARY_CONCURRENCY)
+    await asyncio.gather(*(summarize_item(item, semaphore) for item in items))
     return {"generated": len(items), "items": list_summaries(limit)}
 
 
