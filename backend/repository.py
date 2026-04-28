@@ -207,7 +207,7 @@ def list_articles(limit: int = 500) -> list[dict[str, Any]]:
             FROM articles a
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
-            ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+            ORDER BY a.fetched_at DESC
             LIMIT %s
             """,
             (limit,),
@@ -454,7 +454,7 @@ def list_articles_without_summaries(limit: int = 20) -> list[dict[str, Any]]:
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE sm.article_id IS NULL
-            ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+            ORDER BY a.fetched_at DESC
             LIMIT %s
             """,
             (limit,),
@@ -635,7 +635,7 @@ def get_event(event_id: str) -> dict[str, Any] | None:
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE ea.event_id = %s
-            ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+            ORDER BY a.fetched_at DESC
             """,
             (event_id,),
         ).fetchall()
@@ -659,7 +659,7 @@ def search_articles(query: str, limit: int = 50) -> list[dict[str, Any]]:
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE a.title ILIKE %s OR a.summary ILIKE %s OR sm.one_liner ILIKE %s
                OR sm.why_important ILIKE %s OR s.name ILIKE %s OR a.category ILIKE %s
-            ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+            ORDER BY a.fetched_at DESC
             LIMIT %s
             """,
             (pattern, pattern, pattern, pattern, pattern, pattern, limit),
@@ -806,7 +806,7 @@ def topic_articles(topic_id: int, limit: int = 50) -> list[dict[str, Any]]:
             LEFT JOIN sources s ON s.id = a.source_id
             LEFT JOIN summaries sm ON sm.article_id = a.id
             WHERE {' OR '.join(clauses)}
-            ORDER BY COALESCE(a.published_at, a.fetched_at) DESC
+            ORDER BY a.fetched_at DESC
             LIMIT %s
             """,
             values,

@@ -299,7 +299,7 @@ function App() {
                 <div className="feedHeader">
                   <div>
                     <h3>重点信号</h3>
-                    <p>按影响力、时效性、来源可信度综合排序</p>
+                    <p>按最新抓取时间排序，优先展示新进入的信息</p>
                   </div>
                   <span>{filteredItems.length} 条结果</span>
                 </div>
