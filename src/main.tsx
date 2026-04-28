@@ -15,7 +15,8 @@ import { TrendPanel } from "./components/TrendPanel";
 import type { ApiPayload, Bookmark, DailyBrief, IntelEvent, NewsItem, RefreshJob, Source, SystemStatus, Topic } from "./types";
 import "./styles.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
+const SIDEBAR_COLLAPSED_KEY = "latest-ai-updates-sidebar-collapsed";
 
 function App() {
   const [payload, setPayload] = useState<ApiPayload>({ last_updated: null, items: [] });
@@ -23,7 +24,7 @@ function App() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState("brief");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true");
   const [page, setPage] = useState(1);
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [schedulerSaving, setSchedulerSaving] = useState(false);
@@ -221,6 +222,10 @@ function App() {
   useEffect(() => {
     setPage(1);
   }, [activeCategory, query]);
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   const officialCount = payload.items.filter((item) => item.source_type === "官方来源").length;
   const highImportanceCount = payload.items.filter((item) => item.importance >= 4).length;
