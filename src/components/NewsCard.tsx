@@ -11,7 +11,7 @@ type NewsCardProps = {
 
 export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps) {
   const accent = accentForCategory(item.category);
-  const readableSummary = item.ai_one_liner || item.summary || "暂无摘要，点击标题查看原文。";
+  const primaryTitle = item.ai_one_liner || item.title;
   const whyImportant = item.ai_why_important;
 
   return (
@@ -26,7 +26,7 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
 
       <div className="newsTitleRow">
         <a className="newsTitle" href={item.url} target="_blank" rel="noreferrer">
-          {item.title}
+          {primaryTitle}
           <ArrowUpRight size={20} />
         </a>
         {onBookmark && (
@@ -42,8 +42,8 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
       </div>
 
       <div className="aiDigest">
-        <span>中文解读</span>
-        <p>{readableSummary}</p>
+        <span>原始标题</span>
+        <p>{item.title}</p>
         {whyImportant && <small>{whyImportant}</small>}
       </div>
 
