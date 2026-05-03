@@ -10,10 +10,16 @@ if [ -f /etc/latest-ai-updates.env ]; then
   set +a
 fi
 
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
 git pull --ff-only
 npm ci
 git restore package-lock.json package.json 2>/dev/null || true
 npm run build
+
+if [ ! -x .venv/bin/python ]; then
+  "$PYTHON_BIN" -m venv .venv
+fi
 
 .venv/bin/pip install -r requirements.txt
 PYTHONPATH=. .venv/bin/python scripts/setup_db.py
