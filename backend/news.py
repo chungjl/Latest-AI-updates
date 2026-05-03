@@ -466,70 +466,73 @@ async def refresh_items_job(job_id: str, trigger: str = "manual") -> dict[str, A
     stored = 0
     semaphore = asyncio.Semaphore(FETCH_CONCURRENCY)
 
-    try:
-        async with asyncio.timeout(BACKGROUND_REFRESH_TIMEOUT_SECONDS):
-            async with httpx.AsyncClient(
-                headers={"User-Agent": USER_AGENT},
-                timeout=httpx.Timeout(
-                    BACKGROUND_REQUEST_TIMEOUT_SECONDS,
-                    connect=min(5, BACKGROUND_REQUEST_TIMEOUT_SECONDS),
-                    read=BACKGROUND_REQUEST_TIMEOUT_SECONDS,
-                    write=5,
-                    pool=5,
-                ),
-                limits=httpx.Limits(max_connections=FETCH_CONCURRENCY + 2, max_keepalive_connections=FETCH_CONCURRENCY),
-                follow_redirects=True,
-                trust_env=False,
-            ) as client:
-                tasks = [
-                    asyncio.create_task(fetch_source_items(client, semaphore, source, BACKGROUND_REQUEST_TIMEOUT_SECONDS))
-                    for source in enabled_sources
-                ]
-                for task in asyncio.as_completed(tasks):
-                    result = await task
-                    if result["success"]:
-                        items = result["items"]
-                        new_items, stored = upsert_articles(items)
-                        fetched_count += len(items)
-                        new_items_count += new_items
-                        update_source_health(result["source"], True)
-                        upsert_refresh_job_source(
-                            job_id,
-                            result["source"],
-                            "success",
-                            len(items),
-                            None,
-                            result.get("duration_seconds"),
-                        )
-                        update_refresh_job_progress(job_id, 1, len(items), new_items, stored)
-                    else:
-                        error = {"source": result["source"], "error": result["error"]}
-                        errors.append(error)
-                        update_source_health(result["source"], False, result["error"])
-                        upsert_refresh_job_source(
-                            job_id,
-                            result["source"],
-                            "failed",
-                            0,
-                            result["error"],
-                            result.get("duration_seconds"),
-                        )
-                        update_refresh_job_progress(job_id, 1, 0, 0, stored or None, error)
-
-                    items = list_articles()
-                    write_json(
-                        DATA_FILE,
-                        {
-                            "last_updated": utc_now(),
-                            "items": items[:500],
-                            "errors": errors,
-                            "stats": {
-                                "sources": len(enabled_sources),
-                                "fetched": fetched_count,
-                                "stored": len(items),
-                            },
-                        },
+    async def run_sources() -> None:
+        nonlocal fetched_count, new_items_count, stored
+        async with httpx.AsyncClient(
+            headers={"User-Agent": USER_AGENT},
+            timeout=httpx.Timeout(
+                BACKGROUND_REQUEST_TIMEOUT_SECONDS,
+                connect=min(5, BACKGROUND_REQUEST_TIMEOUT_SECONDS),
+                read=BACKGROUND_REQUEST_TIMEOUT_SECONDS,
+                write=5,
+                pool=5,
+            ),
+            limits=httpx.Limits(max_connections=FETCH_CONCURRENCY + 2, max_keepalive_connections=FETCH_CONCURRENCY),
+            follow_redirects=True,
+            trust_env=False,
+        ) as client:
+            tasks = [
+                asyncio.create_task(fetch_source_items(client, semaphore, source, BACKGROUND_REQUEST_TIMEOUT_SECONDS))
+                for source in enabled_sources
+            ]
+            for task in asyncio.as_completed(tasks):
+                result = await task
+                if result["success"]:
+                    items = result["items"]
+                    new_items, stored = upsert_articles(items)
+                    fetched_count += len(items)
+                    new_items_count += new_items
+                    update_source_health(result["source"], True)
+                    upsert_refresh_job_source(
+                        job_id,
+                        result["source"],
+                        "success",
+                        len(items),
+                        None,
+                        result.get("duration_seconds"),
                     )
+                    update_refresh_job_progress(job_id, 1, len(items), new_items, stored)
+                else:
+                    error = {"source": result["source"], "error": result["error"]}
+                    errors.append(error)
+                    update_source_health(result["source"], False, result["error"])
+                    upsert_refresh_job_source(
+                        job_id,
+                        result["source"],
+                        "failed",
+                        0,
+                        result["error"],
+                        result.get("duration_seconds"),
+                    )
+                    update_refresh_job_progress(job_id, 1, 0, 0, stored or None, error)
+
+                items = list_articles()
+                write_json(
+                    DATA_FILE,
+                    {
+                        "last_updated": utc_now(),
+                        "items": items[:500],
+                        "errors": errors,
+                        "stats": {
+                            "sources": len(enabled_sources),
+                            "fetched": fetched_count,
+                            "stored": len(items),
+                        },
+                    },
+                )
+
+    try:
+        await asyncio.wait_for(run_sources(), timeout=BACKGROUND_REFRESH_TIMEOUT_SECONDS)
     except TimeoutError:
         error = {"source": "refresh-job", "error": f"刷新超过 {BACKGROUND_REFRESH_TIMEOUT_SECONDS}s，已自动停止"}
         errors.append(error)
