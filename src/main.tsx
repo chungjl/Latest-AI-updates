@@ -17,6 +17,9 @@ import "./styles.css";
 
 const PAGE_SIZE = 8;
 const SIDEBAR_COLLAPSED_KEY = "latest-ai-updates-sidebar-collapsed";
+const ACTIVE_REFRESH_POLL_MS = 3000;
+const SUMMARY_POLL_MS = 5000;
+const IDLE_POLL_MS = 60000;
 
 function isToday(value?: string | null) {
   if (!value) return false;
@@ -53,12 +56,16 @@ function App() {
 
   async function loadItems() {
     const response = await fetch("/api/items");
-    setPayload(await response.json());
+    const data = await response.json();
+    setPayload(data);
+    return data;
   }
 
   async function loadStatus() {
     const response = await fetch("/api/status");
-    setSystemStatus(await response.json());
+    const data = await response.json();
+    setSystemStatus(data);
+    return data;
   }
 
   async function loadDailyBrief() {
@@ -207,7 +214,7 @@ function App() {
         setSummaryPollingUntil(Date.now() + 90_000);
         window.clearInterval(timer);
       }
-    }, 3000);
+    }, ACTIVE_REFRESH_POLL_MS);
     return () => window.clearInterval(timer);
   }, [loading, refreshJob?.id]);
 
@@ -220,9 +227,29 @@ function App() {
         return;
       }
       await loadItems();
-    }, 3000);
+    }, SUMMARY_POLL_MS);
     return () => window.clearInterval(timer);
   }, [summaryPollingUntil]);
+
+  useEffect(() => {
+    const timer = window.setInterval(async () => {
+      if (loading || summaryPollingUntil) return;
+      const status = await loadStatus();
+      await loadItems();
+      await loadProductData();
+      if (status.refresh_status?.running) {
+        const response = await fetch("/api/refresh/current");
+        if (response.ok) {
+          const job = await response.json();
+          if (job?.id) {
+            setRefreshJob(job);
+            setLoading(true);
+          }
+        }
+      }
+    }, IDLE_POLL_MS);
+    return () => window.clearInterval(timer);
+  }, [loading, summaryPollingUntil]);
 
   const categories = useMemo(() => {
     const counts = new Map<string, number>([["全部", payload.items.length]]);
