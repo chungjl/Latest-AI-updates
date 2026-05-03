@@ -18,6 +18,17 @@ import "./styles.css";
 const PAGE_SIZE = 8;
 const SIDEBAR_COLLAPSED_KEY = "latest-ai-updates-sidebar-collapsed";
 
+function isToday(value?: string | null) {
+  if (!value) return false;
+  const date = new Date(value);
+  const today = new Date();
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
 function App() {
   const [payload, setPayload] = useState<ApiPayload>({ last_updated: null, items: [] });
   const [activeCategory, setActiveCategory] = useState("全部");
@@ -244,6 +255,7 @@ function App() {
 
   const officialCount = payload.items.filter((item) => item.source_type === "官方来源").length;
   const highImportanceCount = payload.items.filter((item) => item.importance >= 4).length;
+  const todayItemsCount = payload.items.filter((item) => isToday(item.created_at || item.fetched_at)).length;
   const credibility = payload.errors?.length ? 86 : 91;
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -271,7 +283,7 @@ function App() {
         />
 
         <section className="metrics" aria-label="概览">
-          <MetricCard label="今日资讯" value={payload.items.length} hint="+18% vs 昨日" icon={<Database size={19} />} />
+          <MetricCard label="今日新增" value={todayItemsCount} hint={`资讯池 ${payload.items.length} 条`} icon={<Database size={19} />} />
           <MetricCard label="高价值信号" value={highImportanceCount} hint="+6 新增" icon={<BadgeCheck size={19} />} tone="blue" />
           <MetricCard label="追踪专题" value={topics.length} hint={`${events.length} 个事件`} icon={<FolderKanban size={19} />} tone="violet" />
           <MetricCard label="覆盖渠道" value={payload.stats?.sources || officialCount} hint="稳定运行" icon={<RadioTower size={19} />} tone="amber" />
