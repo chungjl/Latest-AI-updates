@@ -16,6 +16,7 @@ import feedparser
 import httpx
 from bs4 import BeautifulSoup
 
+from .fetching import fetch_text
 from .db import init_db
 from .repository import (
     create_refresh_job,
@@ -306,12 +307,6 @@ def parse_html_page(text: str, source: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
-async def fetch_text(client: httpx.AsyncClient, url: str) -> str:
-    response = await client.get(url)
-    response.raise_for_status()
-    return response.text
-
-
 async def fetch_source_items(
     client: httpx.AsyncClient,
     semaphore: asyncio.Semaphore,
@@ -322,7 +317,7 @@ async def fetch_source_items(
         started = time.perf_counter()
         source_name = source.get("name", source.get("url", "未知来源"))
         try:
-            text = await asyncio.wait_for(fetch_text(client, source["url"]), timeout=timeout_seconds)
+            text = await asyncio.wait_for(fetch_text(client, source, timeout_seconds), timeout=timeout_seconds)
             items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
             duration_seconds = round(time.perf_counter() - started, 2)
             logger.info("Fetched source %s in %.2fs with %s items", source_name, duration_seconds, len(items))

@@ -23,6 +23,10 @@
     "name": "Hugging Face Blog",
     "url": "https://huggingface.co/blog/feed.xml",
     "type": "官方来源",
+    "fetch_options": {
+      "proxy_fallback": true,
+      "proxy_timeout_seconds": 30
+    },
     "enabled": true
   },
   {
@@ -53,6 +57,10 @@
     "name": "MIT News AI",
     "url": "https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml",
     "type": "研究/高校",
+    "fetch_options": {
+      "curl_fallback": true,
+      "curl_fallback_statuses": [403]
+    },
     "enabled": true
   },
   {
