@@ -53,6 +53,7 @@ function App() {
   const [topicKeywords, setTopicKeywords] = useState("");
   const [topicSaving, setTopicSaving] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
+  const [regeneratingSummaryIds, setRegeneratingSummaryIds] = useState<Set<string>>(new Set());
 
   async function loadItems() {
     const response = await fetch("/api/items");
@@ -158,6 +159,27 @@ function App() {
       });
     }
     await loadProductData();
+  }
+
+  async function regenerateSummary(item: NewsItem) {
+    setRegeneratingSummaryIds((current) => new Set(current).add(item.id));
+    try {
+      const response = await fetch(`/api/articles/${item.id}/summary/regenerate`, { method: "POST" });
+      if (!response.ok) return;
+      const updated: NewsItem | null = await response.json();
+      if (!updated) return;
+      setPayload((current) => ({
+        ...current,
+        items: current.items.map((currentItem) => (currentItem.id === updated.id ? updated : currentItem)),
+      }));
+      await loadProductData();
+    } finally {
+      setRegeneratingSummaryIds((current) => {
+        const next = new Set(current);
+        next.delete(item.id);
+        return next;
+      });
+    }
   }
 
   async function createTopic() {
@@ -367,6 +389,8 @@ function App() {
                         item={item}
                         bookmarked={bookmarks.some((bookmark) => bookmark.article_id === item.id)}
                         onBookmark={toggleBookmark}
+                        onRegenerateSummary={regenerateSummary}
+                        regenerating={regeneratingSummaryIds.has(item.id)}
                       />
                     ))}
                   </div>
@@ -505,7 +529,14 @@ function App() {
             ) : (
               <div className="newsGrid">
                 {bookmarks.map((item) => (
-                  <NewsCard key={item.article_id} item={item} bookmarked onBookmark={toggleBookmark} />
+                  <NewsCard
+                    key={item.article_id}
+                    item={item}
+                    bookmarked
+                    onBookmark={toggleBookmark}
+                    onRegenerateSummary={regenerateSummary}
+                    regenerating={regeneratingSummaryIds.has(item.id)}
+                  />
                 ))}
               </div>
             )}

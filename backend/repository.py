@@ -168,14 +168,9 @@ def upsert_articles(items: list[dict[str, Any]]) -> tuple[int, int]:
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now())
                 ON CONFLICT (id) DO UPDATE SET
                   source_id = EXCLUDED.source_id,
-                  title = EXCLUDED.title,
                   url = EXCLUDED.url,
-                  summary = EXCLUDED.summary,
                   published_at = COALESCE(EXCLUDED.published_at, articles.published_at),
-                  category = EXCLUDED.category,
-                  importance = EXCLUDED.importance,
                   fetched_at = COALESCE(articles.fetched_at, EXCLUDED.fetched_at),
-                  raw = EXCLUDED.raw,
                   updated_at = now()
                 """,
                 (
@@ -218,6 +213,25 @@ def list_articles(limit: int = 500) -> list[dict[str, Any]]:
 def count_articles() -> int:
     with get_conn() as conn:
         return conn.execute("SELECT count(*) AS count FROM articles").fetchone()["count"]
+
+
+def get_article(article_id: str) -> dict[str, Any] | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            """
+            SELECT
+              a.id, a.title, a.url, a.summary, a.published_at, a.category, a.importance, a.fetched_at, a.created_at,
+              s.name AS source, s.type AS source_type, s.url AS source_url,
+              sm.one_liner AS ai_one_liner, sm.why_important AS ai_why_important,
+              sm.audience AS ai_audience, sm.provider AS ai_provider, sm.model AS ai_model
+            FROM articles a
+            LEFT JOIN sources s ON s.id = a.source_id
+            LEFT JOIN summaries sm ON sm.article_id = a.id
+            WHERE a.id = %s
+            """,
+            (article_id,),
+        ).fetchone()
+    return article_row(row) if row else None
 
 
 def article_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -426,19 +440,34 @@ def get_current_refresh_job() -> dict[str, Any] | None:
     return get_refresh_job(row["id"]) if row else None
 
 
-def upsert_summary(article_id: str, one_liner: str, why_important: str, audience: str, provider: str, model: str) -> None:
-    with get_conn() as conn:
-        conn.execute(
-            """
-            INSERT INTO summaries (article_id, one_liner, why_important, audience, provider, model, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, now())
-            ON CONFLICT (article_id) DO UPDATE SET
+def upsert_summary(
+    article_id: str,
+    one_liner: str,
+    why_important: str,
+    audience: str,
+    provider: str,
+    model: str,
+    overwrite: bool = False,
+) -> None:
+    conflict_sql = (
+        """
               one_liner = EXCLUDED.one_liner,
               why_important = EXCLUDED.why_important,
               audience = EXCLUDED.audience,
               provider = EXCLUDED.provider,
               model = EXCLUDED.model,
               updated_at = now()
+        """
+        if overwrite
+        else "updated_at = summaries.updated_at"
+    )
+    with get_conn() as conn:
+        conn.execute(
+            f"""
+            INSERT INTO summaries (article_id, one_liner, why_important, audience, provider, model, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, now())
+            ON CONFLICT (article_id) DO UPDATE SET
+              {conflict_sql}
             """,
             (article_id, one_liner, why_important, audience, provider, model),
         )

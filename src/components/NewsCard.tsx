@@ -1,5 +1,5 @@
 import type React from "react";
-import { ArrowUpRight, Bookmark, BookmarkCheck, Clock3, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Bookmark, BookmarkCheck, Clock3, RotateCw, ShieldCheck } from "lucide-react";
 import type { NewsItem } from "../types";
 import { formatDate } from "../utils";
 
@@ -7,9 +7,11 @@ type NewsCardProps = {
   item: NewsItem;
   bookmarked?: boolean;
   onBookmark?: (item: NewsItem) => void;
+  onRegenerateSummary?: (item: NewsItem) => void;
+  regenerating?: boolean;
 };
 
-export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps) {
+export function NewsCard({ item, bookmarked = false, onBookmark, onRegenerateSummary, regenerating = false }: NewsCardProps) {
   const accent = accentForCategory(item.category);
   const primaryTitle = item.ai_one_liner || "中文解读生成中";
   const whyImportant = item.ai_why_important;
@@ -29,16 +31,31 @@ export function NewsCard({ item, bookmarked = false, onBookmark }: NewsCardProps
           {primaryTitle}
           <ArrowUpRight size={20} />
         </a>
-        {onBookmark && (
-          <button
-            type="button"
-            className={bookmarked ? "bookmarkButton active" : "bookmarkButton"}
-            onClick={() => onBookmark(item)}
-            aria-label={bookmarked ? "取消收藏" : "收藏"}
-          >
-            {bookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-          </button>
-        )}
+        <div className="newsActions">
+          {onRegenerateSummary && (
+            <button
+              type="button"
+              className="iconActionButton"
+              onClick={() => onRegenerateSummary(item)}
+              aria-label="重新解读"
+              title="重新解读"
+              disabled={regenerating}
+            >
+              <RotateCw size={17} />
+            </button>
+          )}
+          {onBookmark && (
+            <button
+              type="button"
+              className={bookmarked ? "bookmarkButton active" : "bookmarkButton"}
+              onClick={() => onBookmark(item)}
+              aria-label={bookmarked ? "取消收藏" : "收藏"}
+              title={bookmarked ? "取消收藏" : "收藏"}
+            >
+              {bookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+            </button>
+          )}
+        </div>
       </div>
 
       {whyImportant && <p className="newsInsight">{whyImportant}</p>}

@@ -23,6 +23,7 @@ from .repository import (
     delete_bookmark,
     finish_refresh_job,
     get_current_refresh_job,
+    get_article,
     get_daily_brief,
     get_event,
     get_refresh_job,
@@ -792,6 +793,25 @@ async def generate_summaries(limit: int = 20) -> dict[str, Any]:
     semaphore = asyncio.Semaphore(SUMMARY_CONCURRENCY)
     await asyncio.gather(*(summarize_item(item, semaphore) for item in items))
     return {"generated": len(items), "items": list_summaries(limit)}
+
+
+async def regenerate_summary(article_id: str) -> dict[str, Any] | None:
+    ensure_bootstrap()
+    item = get_article(article_id)
+    if not item:
+        return None
+    llm_summary = await generate_llm_summary(item)
+    summary = llm_summary or generate_local_summary(item)
+    upsert_summary(
+        item["id"],
+        summary["one_liner"],
+        summary["why_important"],
+        summary["audience"],
+        "llm" if llm_summary else "local",
+        LLM_MODEL if llm_summary else "rule-based",
+        overwrite=True,
+    )
+    return get_article(article_id)
 
 
 async def enrich_summaries_background(limit: int = 50) -> None:

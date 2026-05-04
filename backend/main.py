@@ -26,6 +26,7 @@ from .news import (
     get_today_brief,
     get_topic_articles,
     get_topics,
+    regenerate_summary,
     rebuild_event_index,
     remove_bookmark,
     search,
@@ -106,6 +107,11 @@ def summaries(limit: int = 20) -> list[dict]:
 @app.post("/api/summaries/generate")
 async def summaries_generate(limit: int = 20) -> dict:
     return await generate_summaries(limit)
+
+
+@app.post("/api/articles/{article_id}/summary/regenerate")
+async def article_summary_regenerate(article_id: str) -> dict | None:
+    return await regenerate_summary(article_id)
 
 
 @app.get("/api/brief/today")

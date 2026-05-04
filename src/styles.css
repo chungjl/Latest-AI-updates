@@ -784,12 +784,18 @@ button {
 
 .newsTitleRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 42px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   align-items: start;
 }
 
-.bookmarkButton {
+.newsActions {
+  display: flex;
+  gap: 8px;
+}
+
+.bookmarkButton,
+.iconActionButton {
   width: 42px;
   height: 42px;
   display: inline-flex;
@@ -799,6 +805,21 @@ button {
   border-radius: 50%;
   color: #667085;
   background: rgba(255, 255, 255, 0.82);
+}
+
+.iconActionButton:hover {
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.26);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.iconActionButton:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.iconActionButton:disabled svg {
+  animation: spin 900ms linear infinite;
 }
 
 .bookmarkButton:hover,
