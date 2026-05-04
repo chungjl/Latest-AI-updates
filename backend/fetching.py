@@ -13,6 +13,14 @@ DEFAULT_SOURCE_FETCH_OPTIONS: dict[str, dict[str, Any]] = {
         "proxy_fallback": True,
         "proxy_timeout_seconds": 30,
     },
+    "Hacker News: AI": {
+        "proxy_fallback": True,
+        "proxy_sources": ["Hacker News: AI"],
+        "proxy_timeout_seconds": 30,
+    },
+    "Google DeepMind Blog": {
+        "timeout_seconds": 15,
+    },
     "MIT News AI": {
         "curl_fallback": True,
         "curl_fallback_statuses": [403],
@@ -53,10 +61,11 @@ def source_fetch_options(source: dict[str, Any]) -> dict[str, Any]:
 
 async def fetch_text(client: httpx.AsyncClient, source: dict[str, Any], timeout_seconds: int) -> str:
     options = source_fetch_options(source)
+    request_timeout = int(options.get("timeout_seconds") or timeout_seconds)
     attempts: list[FetchAttempt] = []
 
     try:
-        response = await client.get(source["url"])
+        response = await client.get(source["url"], timeout=request_timeout)
         response.raise_for_status()
         return response.text
     except httpx.HTTPStatusError as exc:

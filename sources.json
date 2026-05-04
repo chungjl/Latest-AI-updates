@@ -17,6 +17,9 @@
     "name": "Google DeepMind Blog",
     "url": "https://deepmind.google/blog/rss.xml",
     "type": "官方来源",
+    "fetch_options": {
+      "timeout_seconds": 15
+    },
     "enabled": true
   },
   {
@@ -79,6 +82,11 @@
     "name": "Hacker News: AI",
     "url": "https://hnrss.org/newest?q=AI",
     "type": "社区",
+    "fetch_options": {
+      "proxy_fallback": true,
+      "proxy_sources": ["Hacker News: AI"],
+      "proxy_timeout_seconds": 30
+    },
     "enabled": true
   }
 ]

@@ -16,7 +16,7 @@ import feedparser
 import httpx
 from bs4 import BeautifulSoup
 
-from .fetching import fetch_text
+from .fetching import fetch_text, source_fetch_options
 from .db import init_db
 from .repository import (
     create_refresh_job,
@@ -316,8 +316,13 @@ async def fetch_source_items(
     async with semaphore:
         started = time.perf_counter()
         source_name = source.get("name", source.get("url", "未知来源"))
+        fetch_options = source_fetch_options(source)
+        effective_timeout_seconds = int(fetch_options.get("timeout_seconds") or timeout_seconds)
         try:
-            text = await asyncio.wait_for(fetch_text(client, source, timeout_seconds), timeout=timeout_seconds)
+            text = await asyncio.wait_for(
+                fetch_text(client, source, effective_timeout_seconds),
+                timeout=effective_timeout_seconds,
+            )
             items = parse_html_page(text, source) if source.get("kind") == "html_page" else parse_feed(text, source)
             duration_seconds = round(time.perf_counter() - started, 2)
             logger.info("Fetched source %s in %.2fs with %s items", source_name, duration_seconds, len(items))
@@ -330,7 +335,7 @@ async def fetch_source_items(
             }
         except asyncio.TimeoutError:
             duration_seconds = round(time.perf_counter() - started, 2)
-            error_message = f"Timeout after {timeout_seconds}s"
+            error_message = f"Timeout after {effective_timeout_seconds}s"
             logger.warning("Failed source %s in %.2fs: %s", source_name, duration_seconds, error_message)
             return {
                 "source": source_name,
