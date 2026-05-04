@@ -28,6 +28,7 @@
     "type": "官方来源",
     "fetch_options": {
       "proxy_fallback": true,
+      "direct_timeout_seconds": 8,
       "proxy_timeout_seconds": 30
     },
     "enabled": true
@@ -85,6 +86,7 @@
     "fetch_options": {
       "proxy_fallback": true,
       "proxy_sources": ["Hacker News: AI"],
+      "direct_timeout_seconds": 8,
       "proxy_timeout_seconds": 30
     },
     "enabled": true

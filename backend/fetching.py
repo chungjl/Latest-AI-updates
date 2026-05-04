@@ -11,11 +11,13 @@ import httpx
 DEFAULT_SOURCE_FETCH_OPTIONS: dict[str, dict[str, Any]] = {
     "Hugging Face Blog": {
         "proxy_fallback": True,
+        "direct_timeout_seconds": 8,
         "proxy_timeout_seconds": 30,
     },
     "Hacker News: AI": {
         "proxy_fallback": True,
         "proxy_sources": ["Hacker News: AI"],
+        "direct_timeout_seconds": 8,
         "proxy_timeout_seconds": 30,
     },
     "Google DeepMind Blog": {
@@ -61,7 +63,7 @@ def source_fetch_options(source: dict[str, Any]) -> dict[str, Any]:
 
 async def fetch_text(client: httpx.AsyncClient, source: dict[str, Any], timeout_seconds: int) -> str:
     options = source_fetch_options(source)
-    request_timeout = int(options.get("timeout_seconds") or timeout_seconds)
+    request_timeout = int(options.get("direct_timeout_seconds") or options.get("timeout_seconds") or timeout_seconds)
     attempts: list[FetchAttempt] = []
 
     try:
